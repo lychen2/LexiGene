@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "config": {
+      "type": "object",
+      "properties": {
+        "baseUrl": {
+          "type": "string",
+          "format": "uri"
+        },
+        "apiKey": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "baseUrl",
+        "apiKey",
+        "model"
+      ]
+    },
+    "target": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "language": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 60
+    },
+    "question": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scenario": {
+          "type": "string",
+          "minLength": 1
+        },
+        "challenge": {
+          "type": "string",
+          "minLength": 1
+        },
+        "focus": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reference": {
+          "type": "object",
+          "properties": {
+            "en": {
+              "type": "string",
+              "minLength": 1
+            },
+            "zh": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "en",
+            "zh"
+          ]
+        },
+        "hints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "term": {
+                "type": "string",
+                "minLength": 1
+              },
+              "en": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "term",
+              "en"
+            ]
+          }
+        }
+      },
+      "required": [
+        "id",
+        "scenario",
+        "challenge",
+        "focus",
+        "reference"
+      ]
+    },
+    "answer": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4000
+    },
+    "context": {
+      "type": "object",
+      "properties": {
+        "core": {
+          "default": "",
+          "type": "string",
+          "maxLength": 4000
+        },
+        "register": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 200
+            },
+            {
+              "type": "number"
+            }
+          ]
+        },
+        "subtext": {
+          "default": "",
+          "type": "string",
+          "maxLength": 2000
+        },
+        "chunks": {
+          "default": [],
+          "maxItems": 20,
+          "type": "array",
+          "items": {}
+        }
+      }
+    }
+  },
+  "required": [
+    "config",
+    "target",
+    "language",
+    "question",
+    "answer",
+    "context"
+  ],
+  "$comment": "Generated from src/lib/schema.ts by internal/contracts/generate_schemas.mjs. Do not edit."
+}

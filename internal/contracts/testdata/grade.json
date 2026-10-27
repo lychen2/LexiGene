@@ -1,0 +1,17 @@
+{
+  "scores": {
+    "naturalness": 8,
+    "register": 7,
+    "imagery": 6
+  },
+  "feedback": "搭配自然，但意象还可以更具体。",
+  "correction": {
+    "en": "A wave of nostalgia washed over me.",
+    "zh": "一阵怀念涌上心头。"
+  },
+  "changes": [
+    "用 a wave of 搭配 nostalgia"
+  ],
+  "followUp": "再用 nostalgia 写一句与气味有关的句子。",
+  "usesTarget": true
+}

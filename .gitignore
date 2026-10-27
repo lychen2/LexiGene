@@ -1,0 +1,16 @@
+node_modules/
+.next/
+.env*
+!.env.example
+*.tsbuildinfo
+test-results/
+playwright-report/
+artifacts/
+dist/
+build/
+.mygo/
+mygo.gen.go
+.pi/
+.DS_Store
+Thumbs.db
+*.log

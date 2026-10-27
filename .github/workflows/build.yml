@@ -1,0 +1,129 @@
+name: Verify and build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+jobs:
+  verify:
+    name: TypeScript, Go, and browser acceptance
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: go.mod
+          cache: false
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: node tools/run-go.mjs test -mod=readonly ./...
+      - run: node tools/run-go.mjs vet ./...
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build:web
+      - run: npx playwright test
+      - name: Upload browser evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: browser-evidence
+          path: |
+            artifacts/*.png
+            test-results/
+          retention-days: 7
+
+  build:
+    name: Package ${{ matrix.platform }}
+    needs: verify
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            platform: linux/amd64
+            artifact: linux-amd64
+          - os: macos-latest
+            platform: darwin/universal
+            artifact: darwin-universal
+          - os: windows-latest
+            platform: windows/amd64
+            artifact: windows-amd64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: Install Linux runtime libraries
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libgtk-3-0 libwebkit2gtk-4.1-0
+      - name: Install Windows installer compiler
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install nsis --yes --no-progress
+          'C:\Program Files (x86)\NSIS' | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      - run: npm ci
+      - name: Build native application and installer
+        run: npm run build -- -platform ${{ matrix.platform }}
+      - name: Archive macOS bundle with permissions
+        if: runner.os == 'macOS'
+        run: ditto -c -k --sequesterRsrc --keepParent build/darwin-universal/LexiGene.app build/darwin-universal/LexiGene-macos-universal.zip
+      - name: Upload packages
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: LexiGene-${{ matrix.artifact }}
+          path: |
+            build/${{ matrix.artifact }}/*.deb
+            build/${{ matrix.artifact }}/*.tar.gz
+            build/${{ matrix.artifact }}/*.exe
+            build/${{ matrix.artifact }}/*.dmg
+            build/${{ matrix.artifact }}/*.zip
+            build/${{ matrix.artifact }}/*OFL*
+            build/${{ matrix.artifact }}/LICENSE
+          if-no-files-found: error
+          retention-days: 14
+
+  release:
+    name: Publish tagged release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          pattern: LexiGene-*
+          path: packages
+      - name: Publish versioned packages
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          mapfile -d '' files < <(find packages -type f \( -name '*.deb' -o -name '*.tar.gz' -o -name '*.exe' -o -name '*.dmg' -o -name '*.zip' \) -print0)
+          gh release create "$RELEASE_TAG" "${files[@]}" --verify-tag --generate-notes --title "LexiGene $RELEASE_TAG"

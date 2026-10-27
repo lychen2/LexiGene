@@ -1,0 +1,401 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "register": {
+      "type": "object",
+      "properties": {
+        "score": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        },
+        "persona": {
+          "type": "string",
+          "minLength": 1
+        },
+        "prosody": {
+          "type": "string",
+          "enum": [
+            "positive",
+            "neutral",
+            "negative",
+            "mixed"
+          ]
+        },
+        "prosodyExplanation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "subtext": {
+          "type": "string",
+          "minLength": 1
+        },
+        "levels": {
+          "minItems": 10,
+          "maxItems": 10,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "level": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1
+              },
+              "candidates": {
+                "maxItems": 3,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "word": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "nuance": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "persona": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "prosody": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "shift": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "example": {
+                      "type": "object",
+                      "properties": {
+                        "en": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "zh": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "en",
+                        "zh"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "word",
+                    "nuance",
+                    "persona",
+                    "prosody",
+                    "shift",
+                    "example"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "level",
+              "label",
+              "candidates"
+            ]
+          }
+        }
+      },
+      "required": [
+        "score",
+        "persona",
+        "prosody",
+        "prosodyExplanation",
+        "subtext",
+        "levels"
+      ]
+    },
+    "chunks": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "minItems": 4,
+          "maxItems": 5,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "phrase": {
+                "type": "string",
+                "minLength": 1
+              },
+              "meaning": {
+                "type": "string",
+                "minLength": 1
+              },
+              "example": {
+                "type": "object",
+                "properties": {
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "zh": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "en",
+                  "zh"
+                ]
+              }
+            },
+            "required": [
+              "phrase",
+              "meaning",
+              "example"
+            ]
+          }
+        },
+        "culture": {
+          "maxItems": 4,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "expression": {
+                "type": "string",
+                "minLength": 1
+              },
+              "explanation": {
+                "type": "string",
+                "minLength": 1
+              },
+              "example": {
+                "type": "object",
+                "properties": {
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "zh": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "en",
+                  "zh"
+                ]
+              }
+            },
+            "required": [
+              "expression",
+              "explanation",
+              "example"
+            ]
+          }
+        }
+      },
+      "required": [
+        "items",
+        "culture"
+      ]
+    },
+    "pitfalls": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "minItems": 2,
+          "maxItems": 3,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "wrong": {
+                "type": "string",
+                "minLength": 1
+              },
+              "right": {
+                "type": "string",
+                "minLength": 1
+              },
+              "explanation": {
+                "type": "string",
+                "minLength": 1
+              },
+              "image": {
+                "type": "string",
+                "minLength": 1
+              },
+              "translation": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "wrong",
+              "right",
+              "explanation",
+              "image",
+              "translation"
+            ]
+          }
+        }
+      },
+      "required": [
+        "items"
+      ]
+    },
+    "slices": {
+      "type": "object",
+      "properties": {
+        "dialogues": {
+          "minItems": 3,
+          "maxItems": 3,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "setting": {
+                "type": "string",
+                "enum": [
+                  "friends",
+                  "work",
+                  "culture"
+                ]
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1
+              },
+              "lines": {
+                "minItems": 2,
+                "maxItems": 6,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "speaker": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "en": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "zh": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "annotation": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "speaker",
+                    "en",
+                    "zh",
+                    "annotation"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "setting",
+              "title",
+              "lines"
+            ]
+          }
+        },
+        "quiz": {
+          "minItems": 2,
+          "maxItems": 2,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "scenario": {
+                "type": "string",
+                "minLength": 1
+              },
+              "challenge": {
+                "type": "string",
+                "minLength": 1
+              },
+              "focus": {
+                "type": "string",
+                "minLength": 1
+              },
+              "reference": {
+                "type": "object",
+                "properties": {
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "zh": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "en",
+                  "zh"
+                ]
+              },
+              "hints": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "term": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "en": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "term",
+                    "en"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "id",
+              "scenario",
+              "challenge",
+              "focus",
+              "reference"
+            ]
+          }
+        }
+      },
+      "required": [
+        "dialogues",
+        "quiz"
+      ]
+    }
+  },
+  "required": [
+    "register",
+    "chunks",
+    "pitfalls",
+    "slices"
+  ],
+  "$comment": "Generated from src/lib/schema.ts by internal/contracts/generate_schemas.mjs. Do not edit."
+}

@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "config": {
+      "type": "object",
+      "properties": {
+        "baseUrl": {
+          "type": "string",
+          "format": "uri"
+        },
+        "apiKey": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "baseUrl",
+        "apiKey",
+        "model"
+      ]
+    },
+    "target": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "language": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 60
+    },
+    "question": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "scenario": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "challenge": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        }
+      },
+      "required": [
+        "id",
+        "scenario",
+        "challenge"
+      ]
+    }
+  },
+  "required": [
+    "config",
+    "target",
+    "language",
+    "question"
+  ],
+  "$comment": "Generated from src/lib/schema.ts by internal/contracts/generate_schemas.mjs. Do not edit."
+}

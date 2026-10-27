@@ -1,0 +1,24 @@
+{
+  "name": "LexiGene",
+  "slug": "lexigene",
+  "identifier": "dev.lexigene.app",
+  "version": "1.0.0",
+  "devUrl": "http://127.0.0.1:5173",
+  "devCommand": "npm run dev:web",
+  "buildCommand": "npm run build:web",
+  "frontendDist": "dist",
+  "bindings": "src/mygo.ts",
+  "out": "build",
+  "icon": "resources/icon.png",
+  "resources": [
+    "public/fonts/ReadingFont-OFL.txt",
+    "LICENSE"
+  ],
+  "linux": {
+    "comment": "A local-first English vocabulary learning desk",
+    "categories": [
+      "Education"
+    ],
+    "webview": true
+  }
+}

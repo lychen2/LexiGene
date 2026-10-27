@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "deckName": {
+      "default": "LexiGene",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "cards": {
+      "minItems": 1,
+      "maxItems": 1000,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "core",
+              "chunk",
+              "pitfall",
+              "nuance",
+              "quiz"
+            ]
+          },
+          "front": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          },
+          "back": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 30000
+          },
+          "tags": {
+            "maxItems": 30,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "front",
+          "back",
+          "tags"
+        ]
+      }
+    }
+  },
+  "required": [
+    "cards"
+  ],
+  "$comment": "Generated from src/lib/schema.ts by internal/contracts/generate_schemas.mjs. Do not edit."
+}

@@ -1,0 +1,163 @@
+/* Module 4 synonym register meters.
+   Scoped to .word-tabs button.synonym-tab so the compact meter coexists with the
+   global .word-tabs rules in globals.css without editing them. The gradient runs
+   light green (low register) -> light orange (high register) to match the warm
+   paper theme; markers are static, so the value is model-assigned and not editable. */
+
+.word-tabs.synonym-tabs,
+.synonym-register-legend {
+  --synonym-register-gradient: linear-gradient(90deg, #cfe2b6 0%, #dcdfae 38%, #edd3a4 70%, #f4c08a 100%);
+  --synonym-register-line: #e5e8d9;
+  --synonym-register-track: #f1f2e7;
+}
+
+/* Small shared scale so the per-tab markers read as one common axis. */
+.synonym-register-legend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  margin: -6px 0 10px;
+  font: 11px/1 var(--sans);
+  color: #64745f;
+  letter-spacing: .5px;
+}
+.synonym-register-legend .synonym-register-legend-bar {
+  flex: none;
+  width: clamp(48px, 12vw, 96px);
+  height: 5px;
+  border-radius: 999px;
+  background-image: var(--synonym-register-gradient);
+  opacity: .9;
+}
+
+.word-tabs.synonym-tabs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(138px, 1fr));
+  gap: 9px;
+  align-items: stretch;
+}
+
+.word-tabs button.synonym-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px 12px 11px;
+  text-align: left;
+}
+.word-tabs button.synonym-tab:not(.active):hover { border-color: #c9d3ba; }
+
+.word-tabs button.synonym-tab .synonym-word {
+  font: 20px/1.25 var(--serif);
+  letter-spacing: -.2px;
+  overflow-wrap: break-word;
+}
+
+.word-tabs button.synonym-tab .synonym-register {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.word-tabs button.synonym-tab .synonym-register-track {
+  position: relative;
+  display: block;
+  height: 6px;
+  border: 1px solid var(--synonym-register-line);
+  border-radius: 999px;
+  background-color: var(--synonym-register-track);
+  margin-top: 2px;
+}
+
+/* One continuous gradient across the whole 1-10 scale, so tabs share a common axis. */
+.word-tabs button.synonym-tab .synonym-register-track::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: var(--synonym-register-gradient);
+}
+
+/* Veil beyond the marker: the gradient stays continuous, the value stays obvious. */
+.word-tabs button.synonym-tab .synonym-register-rest {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: var(--synonym-register-position, 50%);
+  border-radius: 0 999px 999px 0;
+  background: #fffdf8b8;
+  clip-path: inset(0 round 999px);
+}
+
+.word-tabs button.synonym-tab .synonym-register-marker {
+  position: absolute;
+  top: 50%;
+  left: clamp(6px, var(--synonym-register-position, 50%), calc(100% - 6px));
+  width: 11px;
+  height: 11px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 0 1.5px #ffffff, 0 1px 3px #48543a59, 0 0 0 2.5px #8c9e7a40;
+  transition: box-shadow .18s;
+}
+
+.word-tabs button.synonym-tab.active .synonym-register-marker {
+  box-shadow: 0 0 0 2px #ffffff, 0 1px 4px #465a3233, 0 0 0 3.5px #7a96645c;
+}
+
+.word-tabs button.synonym-tab .synonym-register-readout {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  font-family: var(--sans);
+  line-height: 1.2;
+}
+.word-tabs button.synonym-tab .synonym-register-label {
+  font-size: 11px;
+  letter-spacing: .2px;
+  color: #5b6d50;
+}
+.word-tabs button.synonym-tab .synonym-register-readout strong {
+  font: 600 14px/1 var(--sans);
+  color: #4d6446;
+  letter-spacing: .2px;
+  white-space: nowrap;
+}
+.word-tabs button.synonym-tab .synonym-register-readout strong span {
+  font-size: 11px;
+  font-weight: 500;
+  color: #55684c;
+  margin-left: 1px;
+}
+.word-tabs button.synonym-tab.active .synonym-register-readout strong { color: #3f6034; }
+.word-tabs button.synonym-tab.active .synonym-register-label { color: #55684c; }
+
+@media (max-width: 1200px) {
+  .word-tabs button.synonym-tab .synonym-word { font-size: 18px; }
+}
+
+@media (max-width: 760px) {
+  .word-tabs.synonym-tabs { gap: 8px; }
+  .word-tabs button.synonym-tab { padding: 11px 10px 10px; gap: 9px; }
+  .word-tabs button.synonym-tab .synonym-word { font-size: 17px; }
+}
+
+/* Phones: keep 3-4 cards on two readable columns instead of shrinking labels. */
+@media (max-width: 560px) {
+  .synonym-register-legend { display: none; }
+  .word-tabs.synonym-tabs { grid-template-columns: repeat(auto-fit, minmax(124px, 1fr)); gap: 7px; }
+  .word-tabs button.synonym-tab { padding: 10px 9px 9px; gap: 8px; }
+  .word-tabs button.synonym-tab .synonym-word { font-size: 16px; }
+  .word-tabs button.synonym-tab .synonym-register-readout { gap: 4px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .word-tabs button.synonym-tab .synonym-register-marker { transition: none; }
+}

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "baseUrl": {
+      "type": "string",
+      "format": "uri"
+    },
+    "apiKey": {
+      "type": "string",
+      "minLength": 1
+    },
+    "model": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": [
+    "baseUrl",
+    "apiKey",
+    "model"
+  ],
+  "$comment": "Generated from src/lib/schema.ts by internal/contracts/generate_schemas.mjs. Do not edit."
+}

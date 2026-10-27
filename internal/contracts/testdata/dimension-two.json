@@ -1,0 +1,49 @@
+{
+  "concept": {
+    "scene": "听到老歌想起学生时代。",
+    "trigger": "熟悉的气味或旧物。",
+    "psychology": "甜蜜与失落交织。",
+    "intensity": "中等偏强。",
+    "boundary": "不用于强烈悲痛。",
+    "translation": {
+      "common": "怀念；怀旧",
+      "adds": "更个人化。",
+      "misses": "保留了归乡不得的痛感。"
+    }
+  },
+  "nuance": {
+    "sharedScene": "回忆过去并产生情绪波动。",
+    "words": [
+      {
+        "word": "nostalgia",
+        "image": "望着旧照片出神",
+        "register": 6,
+        "distinction": "甜蜜与失落交织。",
+        "example": {
+          "en": "A wave of nostalgia washed over him.",
+          "zh": "一阵怀念涌上他心头。"
+        }
+      },
+      {
+        "word": "longing",
+        "image": "向远处伸手",
+        "register": 6,
+        "distinction": "不必指向过去。",
+        "example": {
+          "en": "She felt a deep longing for home.",
+          "zh": "她深深思念家乡。"
+        }
+      },
+      {
+        "word": "reminiscence",
+        "image": "翻看旧相册",
+        "register": 8,
+        "distinction": "偏正式。",
+        "example": {
+          "en": "His reminiscences were vivid.",
+          "zh": "他的回忆栩栩如生。"
+        }
+      }
+    ]
+  }
+}

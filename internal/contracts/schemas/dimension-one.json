@@ -1,0 +1,169 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "overview": {
+      "type": "object",
+      "properties": {
+        "pronunciation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "core": {
+          "type": "string",
+          "minLength": 1
+        },
+        "definition": {
+          "type": "string",
+          "minLength": 1
+        },
+        "partOfSpeech": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "pronunciation",
+        "core",
+        "definition",
+        "partOfSpeech"
+      ]
+    },
+    "origin": {
+      "type": "object",
+      "properties": {
+        "story": {
+          "type": "string",
+          "minLength": 1
+        },
+        "physicalImage": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evolution": {
+          "minItems": 2,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1
+              },
+              "period": {
+                "type": "string",
+                "minLength": 1
+              },
+              "meaning": {
+                "type": "string",
+                "minLength": 1
+              },
+              "connection": {
+                "type": "string",
+                "minLength": 1
+              },
+              "example": {
+                "type": "object",
+                "properties": {
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "zh": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "en",
+                  "zh"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "label",
+              "period",
+              "meaning",
+              "connection",
+              "example"
+            ]
+          }
+        }
+      },
+      "required": [
+        "story",
+        "physicalImage",
+        "evolution"
+      ]
+    },
+    "bloodline": {
+      "type": "object",
+      "properties": {
+        "family": {
+          "type": "string",
+          "minLength": 1
+        },
+        "route": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "socialFeel": {
+          "type": "string",
+          "minLength": 1
+        },
+        "root": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cognates": {
+          "maxItems": 4,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "word": {
+                "type": "string",
+                "minLength": 1
+              },
+              "meaning": {
+                "type": "string",
+                "minLength": 1
+              },
+              "connection": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "word",
+              "meaning",
+              "connection"
+            ]
+          }
+        }
+      },
+      "required": [
+        "family",
+        "route",
+        "socialFeel",
+        "root",
+        "cognates"
+      ]
+    }
+  },
+  "required": [
+    "overview",
+    "origin",
+    "bloodline"
+  ],
+  "$comment": "Generated from src/lib/schema.ts by internal/contracts/generate_schemas.mjs. Do not edit."
+}

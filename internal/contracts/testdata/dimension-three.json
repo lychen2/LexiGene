@@ -1,0 +1,196 @@
+{
+  "register": {
+    "score": 6,
+    "persona": "受过教育的一般成年人",
+    "prosody": "mixed",
+    "prosodyExplanation": "温柔中带一点失落。",
+    "subtext": "暗示过去比现在更好。",
+    "levels": [
+      {
+        "level": 1,
+        "label": "语域层级 1",
+        "candidates": []
+      },
+      {
+        "level": 2,
+        "label": "语域层级 2",
+        "candidates": []
+      },
+      {
+        "level": 3,
+        "label": "语域层级 3",
+        "candidates": []
+      },
+      {
+        "level": 4,
+        "label": "语域层级 4",
+        "candidates": []
+      },
+      {
+        "level": 5,
+        "label": "语域层级 5",
+        "candidates": []
+      },
+      {
+        "level": 6,
+        "label": "语域层级 6",
+        "candidates": []
+      },
+      {
+        "level": 7,
+        "label": "语域层级 7",
+        "candidates": []
+      },
+      {
+        "level": 8,
+        "label": "语域层级 8",
+        "candidates": []
+      },
+      {
+        "level": 9,
+        "label": "语域层级 9",
+        "candidates": []
+      },
+      {
+        "level": 10,
+        "label": "语域层级 10",
+        "candidates": []
+      }
+    ]
+  },
+  "chunks": {
+    "items": [
+      {
+        "phrase": "chunk 1",
+        "meaning": "语块 1 的含义",
+        "example": {
+          "en": "Chunk example 1.",
+          "zh": "语块例句 1。"
+        }
+      },
+      {
+        "phrase": "chunk 2",
+        "meaning": "语块 2 的含义",
+        "example": {
+          "en": "Chunk example 2.",
+          "zh": "语块例句 2。"
+        }
+      },
+      {
+        "phrase": "chunk 3",
+        "meaning": "语块 3 的含义",
+        "example": {
+          "en": "Chunk example 3.",
+          "zh": "语块例句 3。"
+        }
+      },
+      {
+        "phrase": "chunk 4",
+        "meaning": "语块 4 的含义",
+        "example": {
+          "en": "Chunk example 4.",
+          "zh": "语块例句 4。"
+        }
+      }
+    ],
+    "culture": []
+  },
+  "pitfalls": {
+    "items": [
+      {
+        "wrong": "wrong 1",
+        "right": "right 1",
+        "explanation": "解释",
+        "image": "画面",
+        "translation": "对比说明"
+      },
+      {
+        "wrong": "wrong 2",
+        "right": "right 2",
+        "explanation": "解释",
+        "image": "画面",
+        "translation": "对比说明"
+      }
+    ]
+  },
+  "slices": {
+    "dialogues": [
+      {
+        "setting": "friends",
+        "title": "旧歌",
+        "lines": [
+          {
+            "speaker": "A",
+            "en": "This song gives me nostalgia.",
+            "zh": "这首歌让我很怀念。",
+            "annotation": "名词搭配。"
+          },
+          {
+            "speaker": "B",
+            "en": "Me too.",
+            "zh": "我也是。",
+            "annotation": "简短回应。"
+          }
+        ]
+      },
+      {
+        "setting": "work",
+        "title": "老办公室",
+        "lines": [
+          {
+            "speaker": "Manager",
+            "en": "There is a sense of nostalgia here.",
+            "zh": "这里有一种怀旧感。",
+            "annotation": "正式搭配。"
+          },
+          {
+            "speaker": "New hire",
+            "en": "I can feel it too.",
+            "zh": "我也能感觉到。",
+            "annotation": "承接抽象名词。"
+          }
+        ]
+      },
+      {
+        "setting": "culture",
+        "title": "老电影",
+        "lines": [
+          {
+            "speaker": "Host",
+            "en": "The film runs on pure nostalgia.",
+            "zh": "这部电影完全靠怀旧氛围。",
+            "annotation": "pure nostalgia。"
+          },
+          {
+            "speaker": "Guest",
+            "en": "That is why it still works.",
+            "zh": "这就是它仍然奏效的原因。",
+            "annotation": "works 指作品打动人。"
+          }
+        ]
+      }
+    ],
+    "quiz": [
+      {
+        "id": "q1",
+        "scenario": "你在整理旧物时突然想起童年。",
+        "challenge": "用 nostalgia 描述这一刻的感受。",
+        "focus": "名词搭配与情绪层次",
+        "reference": {
+          "en": "A wave of nostalgia washed over me.",
+          "zh": "一阵怀念涌上心头。"
+        }
+      },
+      {
+        "id": "q2",
+        "scenario": "同事谈论公司旧址。",
+        "challenge": "用 nostalgia 表达对旧办公室的复杂感情。",
+        "focus": "抽象名词与语域",
+        "reference": {
+          "en": "I feel a strange nostalgia for that old office.",
+          "zh": "我对那间旧办公室有一种奇怪的怀念。"
+        }
+      }
+    ]
+  }
+}

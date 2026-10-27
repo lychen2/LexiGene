@@ -1,0 +1,47 @@
+{
+  "overview": {
+    "pronunciation": "/nəˈstældʒə/",
+    "core": "对逝去时光的温柔怀念",
+    "definition": "a sentimental longing for a happy period in the past",
+    "partOfSpeech": "n."
+  },
+  "origin": {
+    "story": "源自希腊语 nostos 与 algos。",
+    "physicalImage": "水手望着远方的海岸。",
+    "evolution": [
+      {
+        "id": "greek",
+        "label": "归乡之痛",
+        "period": "古希腊时期",
+        "meaning": "因无法归乡而产生的痛苦",
+        "connection": "nostos 与 algos 的复合",
+        "example": {
+          "en": "His nostalgia for Ithaca never faded.",
+          "zh": "他对伊萨卡岛的归乡之念从未消退。"
+        }
+      },
+      {
+        "id": "modern",
+        "label": "温柔怀念",
+        "period": "现代",
+        "meaning": "对过去美好时光的感伤怀念",
+        "connection": "痛苦减弱，增加甜蜜感",
+        "example": {
+          "en": "The old song filled her with nostalgia.",
+          "zh": "那首老歌让她充满怀念。"
+        }
+      }
+    ]
+  },
+  "bloodline": {
+    "family": "归乡词族",
+    "route": [
+      "归乡",
+      "痛苦",
+      "怀念"
+    ],
+    "socialFeel": "温和、略带感伤。",
+    "root": "nost-",
+    "cognates": []
+  }
+}

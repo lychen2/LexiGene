@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "scores": {
+      "type": "object",
+      "properties": {
+        "naturalness": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10
+        },
+        "register": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10
+        },
+        "imagery": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10
+        }
+      },
+      "required": [
+        "naturalness",
+        "register",
+        "imagery"
+      ]
+    },
+    "feedback": {
+      "type": "string",
+      "minLength": 1
+    },
+    "correction": {
+      "type": "object",
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "zh": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "en",
+        "zh"
+      ]
+    },
+    "changes": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "followUp": {
+      "type": "string",
+      "minLength": 1
+    },
+    "usesTarget": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "scores",
+    "feedback",
+    "correction",
+    "changes",
+    "followUp",
+    "usesTarget"
+  ],
+  "$comment": "Generated from src/lib/schema.ts by internal/contracts/generate_schemas.mjs. Do not edit."
+}

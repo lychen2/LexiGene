@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "concept": {
+      "type": "object",
+      "properties": {
+        "scene": {
+          "type": "string",
+          "minLength": 1
+        },
+        "trigger": {
+          "type": "string",
+          "minLength": 1
+        },
+        "psychology": {
+          "type": "string",
+          "minLength": 1
+        },
+        "intensity": {
+          "type": "string",
+          "minLength": 1
+        },
+        "boundary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "translation": {
+          "type": "object",
+          "properties": {
+            "common": {
+              "type": "string",
+              "minLength": 1
+            },
+            "adds": {
+              "type": "string",
+              "minLength": 1
+            },
+            "misses": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "common",
+            "adds",
+            "misses"
+          ]
+        }
+      },
+      "required": [
+        "scene",
+        "trigger",
+        "psychology",
+        "intensity",
+        "boundary",
+        "translation"
+      ]
+    },
+    "nuance": {
+      "type": "object",
+      "properties": {
+        "sharedScene": {
+          "type": "string",
+          "minLength": 1
+        },
+        "words": {
+          "minItems": 3,
+          "maxItems": 4,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "word": {
+                "type": "string",
+                "minLength": 1
+              },
+              "image": {
+                "type": "string",
+                "minLength": 1
+              },
+              "register": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10
+              },
+              "distinction": {
+                "type": "string",
+                "minLength": 1
+              },
+              "example": {
+                "type": "object",
+                "properties": {
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "zh": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "en",
+                  "zh"
+                ]
+              }
+            },
+            "required": [
+              "word",
+              "image",
+              "register",
+              "distinction",
+              "example"
+            ]
+          }
+        }
+      },
+      "required": [
+        "sharedScene",
+        "words"
+      ]
+    }
+  },
+  "required": [
+    "concept",
+    "nuance"
+  ],
+  "$comment": "Generated from src/lib/schema.ts by internal/contracts/generate_schemas.mjs. Do not edit."
+}
