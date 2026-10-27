@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { apiFetch } from '@/lib/client';
+import { apiFetch, blobToBase64, saveBlob } from '@/lib/client';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -27,5 +27,20 @@ describe('Go API transport', () => {
     const init = { method: 'POST', body: '{"config":{}}' };
     expect(await apiFetch('/api/models', init)).toBe(response);
     expect(fetch).toHaveBeenCalledWith(expected, init);
+  });
+});
+
+describe('Android export bridge', () => {
+  it('converts binary exports losslessly for the native saver', async () => {
+    const bytes = Uint8Array.from({ length: 70_000 }, (_, index) => (index * 37) % 256);
+    const encoded = await blobToBase64(new Blob([bytes], { type: 'application/octet-stream' }));
+    expect(Buffer.from(encoded, 'base64').equals(Buffer.from(bytes))).toBe(true);
+  });
+
+  it('routes an export through the bridge when the Android shell provides one', async () => {
+    const save = vi.fn();
+    await saveBlob(new Blob(['{"id":"demo"}'], { type: 'application/json' }), 'anagnorisis.json', { save });
+    expect(save).toHaveBeenCalledWith('anagnorisis.json', 'application/json', expect.any(String));
+    expect(Buffer.from(save.mock.calls[0][2], 'base64').toString()).toBe('{"id":"demo"}');
   });
 });

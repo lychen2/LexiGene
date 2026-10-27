@@ -43,6 +43,7 @@ GitHub Actions runs TypeScript, unit, Go, and browser checks on pushes and pull 
 - Ubuntu: Linux amd64 executable, Debian package, and tarball.
 - macOS: universal application, ZIP archive, and DMG.
 - Windows: amd64 executable and NSIS installer.
+- Android: signed APK with the bundled Go service for arm64 devices and x86_64 emulators.
 
 Download packages from the workflow's **Artifacts** section. Version tags such as `v1.0.0` also publish packages to GitHub Releases.
 
@@ -51,7 +52,27 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
-The workflow uses pinned action commits and the Go version from `go.mod`. Packages currently have no platform code signatures.
+The workflow uses pinned action commits and the Go version from `go.mod`. Desktop packages currently have no platform code signatures.
+
+APKs are signed with a generated key unless `ANDROID_KEYSTORE_BASE64` and `ANDROID_KEYSTORE_PASSWORD` secrets hold your release key. Keep one signing key for every published version: Android refuses to install an update signed by a different key.
+
+## Android
+
+The APK runs the same React desk and the same Go API inside a native WebView shell. A bundled Go service listens on `127.0.0.1:47821`, serves the pre-rendered pages, and forwards model requests. No Node process, account, or remote server is involved.
+
+Install `build/android/LexiGene-android.apk` from the workflow artifact. Model settings, history, drafts, and attempts stay in the app's own storage. JSON transfer moves a complete analysis between the desktop, browser, and Android applications.
+
+Exports use Android's file picker. Choose a folder for `.json`, `.tsv`, or `.apkg` files, then import the deck in AnkiDroid or Anki.
+
+Building locally needs Java 17, Python 3, the Android SDK with build-tools, and no Gradle:
+
+```sh
+npm run build:android
+```
+
+Set `ANDROID_HOME` when the SDK is not at `~/Android/Sdk`. The script builds both ABIs, compiles resources with `aapt2`, dexes with `d8`, and signs the result.
+
+Android support is new: the packaged APK is verified structurally in CI, and the same web application passes browser acceptance. Real-device testing is still pending.
 
 ## Connect your model
 

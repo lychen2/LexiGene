@@ -41,11 +41,24 @@ export async function readEvents(response: Response, onEvent: (event: AnalysisEv
     if (!terminal) throw new Error('连接已中断，已完成的维度已保留。');
   } finally { await reader.cancel().catch(() => {}); reader.releaseLock(); }
 }
-export function downloadBlob(blob: Blob, filename: string) {
+export interface ExportBridge { save(name: string, mime: string, base64: string): void }
+export function androidBridge(): ExportBridge | undefined {
+  return typeof window === 'undefined' ? undefined : (window as Window & { LexiGeneBridge?: ExportBridge }).LexiGeneBridge;
+}
+export async function blobToBase64(blob: Blob): Promise<string> {
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  let binary = '';
+  for (let offset = 0; offset < bytes.length; offset += 0x8000) binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
+  return btoa(binary);
+}
+/** Android saves exported files through the system file picker; browsers use a download. */
+export async function saveBlob(blob: Blob, filename: string, bridge: ExportBridge | undefined = androidBridge()) {
+  if (bridge) { bridge.save(filename, blob.type || 'application/octet-stream', await blobToBase64(blob)); return; }
   const url = URL.createObjectURL(blob); const link = document.createElement('a');
   link.href = url; link.download = filename; link.click();
   window.setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
+export function downloadBlob(blob: Blob, filename: string) { saveBlob(blob, filename).catch(() => {}); }
 export function safeFilename(target: string) { return target.replace(/[^\p{L}\p{N}\-_ ]/gu, '').trim().slice(0, 70) || 'lexigene'; }
 
 export function apiFetch(path: string, init?: RequestInit) {

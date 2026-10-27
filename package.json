@@ -11,6 +11,7 @@
     "build:web": "vite build && vite build --ssr src/entry-server.tsx --outDir artifacts/prerender && node tools/prerender.mjs",
     "build": "node tools/run-go.mjs tool mygo build",
     "build:all": "node tools/run-go.mjs tool mygo build -platform darwin/universal,windows/amd64,linux/amd64",
+    "build:android": "node tools/build-android.mjs",
     "start": "node tools/run-go.mjs run . --serve",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
