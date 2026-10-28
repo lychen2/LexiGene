@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="src/app/icon.svg" width="88" height="88" alt="LexiGene DNA mark">
+  <img src="docs/assets/brand.svg" width="120" height="120" alt="LexiGene DNA mark">
 </p>
 
 <h1 align="center">LexiGene</h1>

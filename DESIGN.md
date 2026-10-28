@@ -12,16 +12,19 @@ This refinement preserves the existing layout, content, storage, API contracts, 
 Keep the quiet botanical editorial style: paper, forest ink, restrained terracotta, and English serif display type.
 Use visual variation 4/10, motion 2/10, and information density 6/10.
 Prioritise clear reading, visible controls, and a single primary action in each task area.
+Omit decorative English subtitles, duplicate section labels, and slogans. Keep labels that explain learning content or available actions.
 Use a word-cloud double helix instead of the generic orbit illustration. Add no remote fonts.
 Populate the helix from the current entry's root, cognates, synonyms, and words from its collocations.
 Do not invent etymologies or treat cloud placement as a direct derivation claim.
 Show the vocabulary diagram below the definition on mobile and beside the entry on desktop.
 Both the illustration and compact brand mark are built from dense, curved words.
 The shared geometry projects two ribbons around a cylinder, with depth-sorted words, perspective sizing, and occluded crossings.
-The illustration uses four word lanes per strand; the compact icon uses two heavier lanes with linguistic vocabulary.
+The illustration uses four word lanes per strand. Large brand artwork uses two lanes with linguistic vocabulary.
+At small sizes, four short words use separate shallow curves and heavier glyphs to preserve the silhouette.
 Keep the forest-ink tile, warm-paper foreground words, and terracotta second strand.
 `src/lib/word-helix-layout.mjs` defines the shared geometry and compact brand vocabulary.
-Run `node tools/generate-brand.mjs` to regenerate `src/app/icon.svg`, then `node tools/generate-icon.mjs` for both native PNG assets.
+Run `node tools/generate-brand.mjs` to regenerate the compact `src/app/icon.svg` and larger `docs/assets/brand.svg`.
+Then run `node tools/generate-icon.mjs` for both native PNG assets.
 The interface, favicon, README, desktop icon, and Android launcher all use this word-built identity.
 
 ## Tokens and typography

@@ -35,6 +35,5 @@ export function WordHelix({ doc }: { doc: AnalysisDraft }) {
         <textPath href={'#' + id + '-word-' + index} textLength={token.width} lengthAdjust="spacingAndGlyphs">{token.word}</textPath>
       </text>)}
     </svg>
-    <figcaption><strong>词汇双链</strong><span>词根 · 同源词{doc.dimensions.two ? ' · 近义词' : ''}{doc.dimensions.three ? ' · 搭配' : ''}</span></figcaption>
   </figure>;
 }
