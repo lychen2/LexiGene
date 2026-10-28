@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/egoist/mygo"
 	"lexigene/internal/api"
 	"lexigene/internal/web"
 	"lexigene/internal/wiktionary"
@@ -37,25 +36,24 @@ func main() {
 	service := api.NewHandler(api.Options{Wiktionary: wiki})
 
 	if *serve {
-		listener, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", *port))
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Printf("LexiGene Go service: http://%s\n", listener.Addr())
-		log.Fatal(http.Serve(listener, web.NewHandler(os.DirFS(*frontend), service)))
+		serveBrowser(service, *port, *frontend)
+		return
 	}
 
-	mygo.App.SetName("LexiGene")
-	mygo.App.SetVersion(version)
-	mygo.Protocol.Handle("api", service)
-	mygo.App.WhenReady(func() {
-		mygo.NewWindow(mygo.WindowOptions{
-			Title: "LexiGene — 词汇的另一面", URL: "/",
-			Width: 1440, Height: 1000, MinWidth: 390, MinHeight: 600,
-			BackgroundColor: "#f3f4ee",
-		})
-	})
-	if err := mygo.App.Run(); err != nil {
+	// The desktop launcher is compiled out of the Android service build, which
+	// links no graphical toolkit so that its executable stays fully static.
+	if err := launchDesktop(service); err != nil {
 		log.Fatal(err)
 	}
+}
+
+// serveBrowser exposes the same Go API on loopback for browser use. The Android
+// package runs the bundled service this way from its WebView origin.
+func serveBrowser(service http.Handler, port int, frontend string) {
+	listener, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", port))
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("LexiGene Go service: http://%s\n", listener.Addr())
+	log.Fatal(http.Serve(listener, web.NewHandler(os.DirFS(frontend), service)))
 }

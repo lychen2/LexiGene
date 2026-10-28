@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Base64;
 import android.util.Log;
+import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
@@ -15,6 +16,7 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -41,6 +43,7 @@ public class MainActivity extends Activity {
     private static final int REQUEST_OPEN_JSON = 1001;
     private static final int REQUEST_SAVE_FILE = 1002;
 
+    private FrameLayout contentRoot;
     private WebView webView;
     private Process server;
     private ValueCallback<Uri[]> pendingChooser;
@@ -50,15 +53,22 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Target SDK 35+ draws edge-to-edge. Keep the WebView's fixed controls
+        // inside system bars, while the root supplies their paper background.
+        contentRoot = new FrameLayout(this);
+        contentRoot.setFitsSystemWindows(true);
+        contentRoot.setBackgroundColor(0xfff3f4ee);
+        getWindow().getDecorView().setSystemUiVisibility(
+            View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+        setContentView(contentRoot);
         webView = new WebView(this);
-        setContentView(webView, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         configureWebView();
 
         TextView notice = new TextView(this);
         notice.setText("正在准备词汇研究台…");
         notice.setTextSize(15);
         notice.setPadding(48, 160, 48, 48);
-        setContentView(notice);
+        showContent(notice);
 
         new Thread(() -> {
             try {
@@ -69,7 +79,7 @@ public class MainActivity extends Activity {
                     return;
                 }
                 runOnUiThread(() -> {
-                    setContentView(webView, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                    showContent(webView);
                     webView.loadUrl(ORIGIN + "/");
                 });
             } catch (Exception failure) {
@@ -77,6 +87,12 @@ public class MainActivity extends Activity {
                 showMessage("启动失败：" + failure.getMessage());
             }
         }, "lexigene-startup").start();
+    }
+
+    private void showContent(View view) {
+        contentRoot.removeAllViews();
+        contentRoot.addView(view, new FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
     }
 
     private void configureWebView() {
@@ -223,7 +239,7 @@ public class MainActivity extends Activity {
             notice.setText(message);
             notice.setTextSize(15);
             notice.setPadding(48, 160, 48, 48);
-            setContentView(notice);
+            showContent(notice);
         });
     }
 

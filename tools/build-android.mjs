@@ -43,11 +43,13 @@ mkdirSync(join(assets, 'www', 'licenses'), { recursive: true });
 cpSync(join(root, 'LICENSE'), join(assets, 'www', 'licenses', 'MIT.txt'));
 cpSync(join(root, 'public', 'fonts', 'ReadingFont-OFL.txt'), join(assets, 'www', 'licenses', 'OFL.txt'));
 
+// The headless tag drops the mygo desktop launcher (and its dynamic libc
+// dependency), so Android runs the bundled service as a static executable.
 console.log('Building the bundled Go service…');
 for (const [abi, goarch] of [['arm64-v8a', 'arm64'], ['x86_64', 'amd64']]) {
   const target = join(work, 'lib', abi, 'liblexigene.so');
   mkdirSync(join(work, 'lib', abi), { recursive: true });
-  run('node', ['tools/run-go.mjs', 'build', '-trimpath', '-ldflags', '-s -w', '-o', target, '.'], { env: { ...env, GOARCH: goarch } });
+  run('node', ['tools/run-go.mjs', 'build', '-trimpath', '-tags', 'headless', '-ldflags', '-s -w', '-o', target, '.'], { env: { ...env, GOARCH: goarch } });
 }
 
 console.log(`Compiling resources with ${buildTools.split('/').pop()}…`);
@@ -102,6 +104,7 @@ if (!existsSync(keystore)) {
 }
 run(join(buildTools, 'apksigner'), ['sign', '--ks', keystore, '--ks-pass', `pass:${password}`, '--key-pass', `pass:${password}`, '--out', out, join(work, 'aligned.apk')]);
 run(join(buildTools, 'apksigner'), ['verify', '--print-certs', out]);
+run('python3', [join(root, 'tools', 'verify_apk.py'), out]);
 
 const size = statSync(out).size;
 console.log(`\nAPK: ${relative(root, out)} (${(size / 1024 / 1024).toFixed(1)} MB)`);

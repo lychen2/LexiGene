@@ -11,6 +11,7 @@ import { deleteAnalysis, getAttempts, getDrafts, getHistory, loadSelections, sav
 import { apiFetch as fetch, defaultConfig, downloadBlob, persistConfig, readConfig, readEvents, responseError, safeFilename } from '@/lib/client';
 import { DimensionContent, DimensionHeading, dimensionNames, ExampleLine, moduleIcons, moduleNames, WordHero } from './modules';
 import { QuizScenario } from './quiz-scenario';
+import brandIcon from '@/app/icon.svg';
 
 type DrawerKind = 'settings' | 'history' | 'export' | null;
 const keys: DimensionKey[] = ['one', 'two', 'three'];
@@ -153,7 +154,7 @@ export default function LexiGene() {
 
   return <MotionConfig reducedMotion="user"><LazyMotion features={domAnimation} strict><div className="app-shell">
     <header className="topbar">
-      <a href="#" className="brand" aria-label="LexiGene 首页" onClick={e => { e.preventDefault(); showDemo(); }}><span className="brand-icon"><GitMark /></span><span>LexiGene<span className="brand-dot">.</span></span><span className="brand-divider" /><small>词汇的另一面</small></a>
+      <a href="#" className="brand" aria-label="LexiGene 首页" onClick={e => { e.preventDefault(); showDemo(); }}><span className="brand-icon"><BrandMark /></span><span>LexiGene<span className="brand-dot">.</span></span><span className="brand-divider" /><small>词汇的另一面</small></a>
       <div className="topbar-actions">
         <button className="top-link" onClick={showDemo} disabled={busy}><Sparkles size={15} />探索示例</button>
         <button className="topbar-button" aria-label="学习历史" onClick={() => setDrawer('history')}><History size={17} /><span className="top-action-label">学习档案</span></button>
@@ -163,7 +164,7 @@ export default function LexiGene() {
     </header>
     <aside className="sidebar" aria-label="词汇导航">{sidebar}</aside>
     {mobileMenu && <Drawer title="词汇目录" subtitle="" side="left" onClose={() => { setMobileMenu(false); requestAnimationFrame(() => directoryTrigger.current?.focus({ preventScroll: true })); }}><div className="directory-body">{sidebar}</div></Drawer>}
-    <main className="main"><div className="canvas"><div className="page-intro"><div><span className="intro-label">词汇研究台</span><h2>每个词，都有它的来路。</h2><p>越过翻译，发现词语背后的画面、情绪与世界。</p></div></div>
+    <main className="main"><div className="canvas"><div className="page-intro"><div><h2>从词源到语境，读懂一个词。</h2><p>追溯词根与同源关系，辨析近义词，练习自然表达。</p></div></div>
     <form className="search-bar" onSubmit={e => { e.preventDefault(); void generate(); }}><Search size={20} /><input id="target-input" value={query} maxLength={120} autoComplete="off" onChange={e => setQuery(e.target.value)} placeholder="输入一个英文单词或短语" aria-label="目标单词或短语" disabled={busy} /><div className="language-select"><select aria-label="目标英语变体" value={language} onChange={e => setLanguage(e.target.value)} disabled={busy}><option>美式英语</option><option>英式英语</option><option>澳大利亚英语</option><option>加拿大英语</option><option>通用英语</option></select><ChevronDown size={13} /></div><button type="submit" className="primary-button" disabled={busy}>{busy ? <><Loader2 size={15} className="spin" /><span>解剖中</span></> : <><span>开始解剖</span><ArrowRight size={16} /></>}</button></form>
     <div className="search-foot"><span>单词、短语、俚语，都可以探索</span><button className="text-button" onClick={() => setDrawer('settings')}><span className={`api-status ${config.apiKey ? 'configured' : ''}`} /><span className="model-name">{config.apiKey ? config.model : '连接模型'}</span><ArrowRight size={12} /></button></div>
     <div className="study-sheet"><div className="sheet-toolbar"><span><BookOpen size={16} />词汇笔记<i>/</i><span>{doc.id === demo.id ? '示例研究' : '个人词汇'}</span></span><div><button aria-label="下载 JSON" title="下载 JSON" className="icon-button json-export" disabled={!complete} onClick={() => complete && downloadBlob(new Blob([JSON.stringify(complete, null, 2)], { type: 'application/json' }), `${safeFilename(doc.target)}.json`)}><FileJson size={16} /><span>JSON</span></button><button className="export-button" disabled={!complete} onClick={() => void openExport()}><Layers3 size={14} /><span>导出 Anki</span><ArrowDownToLine size={13} /></button></div></div>
@@ -173,7 +174,7 @@ export default function LexiGene() {
     {error && <div className="generation-error" role="status"><p>{dimensionNames[keys.indexOf(firstMissing || stage)]}生成未完成</p><button className="text-button" onClick={() => jump(`dimension-${keys.indexOf(firstMissing || stage)}`)}>查看原因与重试 <ArrowRight size={14} /></button></div>}
     {!busy && !error && !complete && <div className="generation-progress"><Clock3 size={15} /><span>继续完成这份词汇研究</span><button onClick={() => jump(`dimension-${keys.indexOf(firstMissing || stage)}`)}>定位未完成处</button></div>}
     <div className="study-content">{dimensionNames.map((_, i) => <div id={`dimension-${i}`} key={`${doc.id}-${i}`} className={`dimension-content dim-${i}`}><DimensionHeading index={i} description={['它从哪来？为什么长这样？', '它在英语世界独占哪块领地？', '母语者今天到底怎么用？'][i]} /><DimensionContent doc={doc} index={i} progress={busy && stage === keys[i] ? progress : undefined} onPause={busy && stage === keys[i] ? () => controller.current?.abort() : undefined} state={busy ? (stage === keys[i] ? 'running' : 'waiting') : (firstMissing === keys[i] ? (error ? 'failed' : 'paused') : 'waiting')} error={firstMissing === keys[i] ? error : undefined} onResume={!busy && firstMissing === keys[i] ? () => void generate(doc) : undefined} onAdd={phrase => void openExport(phrase)} sandbox={doc.dimensions.three ? <Sandbox key={doc.id} doc={doc} config={config} attempts={attempts} onConfigure={() => setDrawer('settings')} onAttempt={async attempt => { await saveAttempt(attempt); setAttempts(current => [...current, attempt]); }} onQuestionHints={(questionId, hints) => void storeQuestionHints(questionId, hints)} /> : null} /></div>)}</div>
-    <footer className="study-footer"><span className="footer-mark"><GitMark /> LexiGene.</span><p>从「认识这个词」，到「拥有这个词」。</p><button className="text-button" onClick={focusSearch}>下一个好奇 <ArrowRight size={14} /></button></footer></div>
+    <footer className="study-footer"><span className="footer-mark"><BrandMark /> LexiGene.</span><p>从「认识这个词」，到「拥有这个词」。</p><button className="text-button" onClick={focusSearch}>下一个好奇 <ArrowRight size={14} /></button></footer></div>
     <div className="page-bottom"><span>MADE FOR CURIOUS MINDS.</span>{complete && doc.id !== demo.id && <button onClick={() => void generate({ ...doc, id: crypto.randomUUID(), createdAt: new Date().toISOString(), dimensions: {} })} disabled={busy}>重新解析 {doc.target}</button>}</div></div></main>
     <AnimatePresence>{toast && <m.div role="status" className="toast" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}><CheckCircle2 size={17} />{toast}</m.div>}</AnimatePresence>
     {drawer && <Drawer title={{ settings: '连接你的语言模型', history: '学习档案', export: '把理解，变成记忆。' }[drawer]} subtitle="" onClose={() => setDrawer(null)}>
@@ -184,7 +185,7 @@ export default function LexiGene() {
     <input type="file" hidden ref={fileInput} accept="application/json,.json" aria-label="导入 JSON 文件" onChange={e => void importJson(e.target.files?.[0])} /></div></LazyMotion></MotionConfig>;
 }
 
-function GitMark() { return <svg viewBox="0 0 24 28" fill="none" aria-hidden="true"><path d="M5 2c18 0-4 24 14 24M19 2C1 2 23 26 5 26M7 5h10M8 10h8M8 18h8M7 23h10" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" /><circle cx="19" cy="2" r="2" fill="currentColor" /><circle cx="5" cy="26" r="2" fill="currentColor" /></svg>; }
+function BrandMark() { return <img src={brandIcon} width={36} height={36} alt="" aria-hidden="true" />; }
 
 function Drawer({ title, subtitle, onClose, children, side = 'right' }: { title: string; subtitle: string; onClose: () => void; children: ReactNode; side?: 'left' | 'right' }) {
   const ref = useRef<HTMLDialogElement>(null);
