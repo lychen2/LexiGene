@@ -15,7 +15,7 @@ import brandIcon from '@/app/icon.svg';
 
 type DrawerKind = 'settings' | 'history' | 'export' | null;
 const keys: DimensionKey[] = ['one', 'two', 'three'];
-const cardTypeNames = { core: '核心概念', chunk: '黄金语块', pitfall: '易错对比', nuance: '近义辨析', quiz: '情境造句' };
+const cardTypeNames = { core: '核心概念', chunk: '常见搭配', pitfall: '易错对比', nuance: '近义辨析', quiz: '情境造句' };
 const initialTypes = new Set(['core', 'chunk', 'pitfall']);
 
 export default function LexiGene() {

@@ -192,7 +192,7 @@ test('a stalled third dimension times out locally and resumes without losing ear
     await page.getByRole('textbox', { name: '目标单词或短语' }).fill('timeout-test');
     await page.getByRole('button', { name: '开始解剖', exact: true }).click();
     await expect.poll(() => calls.at(-1)).toBe('three');
-    await expect(page.locator('.generation-progress')).toContainText('横向全息语用');
+    await expect(page.locator('.generation-progress')).toContainText('用法与练习');
     await expect(page.locator('#module-4')).toBeAttached();
     await page.clock.fastForward(660_001);
     const failed = page.locator('#dimension-2 .loading-dimension[data-state="failed"]');
