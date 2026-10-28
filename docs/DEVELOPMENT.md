@@ -43,11 +43,14 @@ GitHub Actions runs TypeScript, unit, Go, and browser checks on pushes and pull 
 - Windows: amd64 executable and NSIS installer.
 - Android: signed APK with the bundled Go service for arm64 devices and x86_64 emulators.
 
-Download packages from the workflow's **Artifacts** section. Version tags such as `v1.0.0` also publish packages to GitHub Releases.
+Download packages from the workflow's **Artifacts** section. Version tags such as `v0.1.1` also publish packages to GitHub Releases.
+Before tagging, align the versions in `package.json`, `package-lock.json`, `mygo.json`, and `main.go`.
+Increase the default Android version code in `tools/build-android.mjs` for each release.
+Version 0.1.1 uses version code 2.
 
 ```sh
-git tag v1.0.0
-git push origin v1.0.0
+git tag -a v0.1.1 -m "LexiGene v0.1.1"
+git push origin v0.1.1
 ```
 
 The workflow uses pinned action commits and the Go version from `go.mod`. Desktop packages currently have no platform code signatures.
