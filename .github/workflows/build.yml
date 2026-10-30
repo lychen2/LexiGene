@@ -48,9 +48,30 @@ jobs:
             test-results/
           retention-days: 7
 
+  # The signed builds of every platform upload to this draft, so it exists
+  # before they start and they share one release.
+  draft:
+    name: Create the draft release
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Create the draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          if ! gh release view "$RELEASE_TAG" > /dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" --draft --verify-tag --title "LexiGene $RELEASE_TAG" --generate-notes
+          fi
+
   build:
     name: Package ${{ matrix.platform }}
-    needs: verify
+    needs: [verify, draft]
+    if: always() && needs.verify.result == 'success' && (needs.draft.result == 'success' || needs.draft.result == 'skipped')
     strategy:
       fail-fast: false
       matrix:
@@ -83,8 +104,18 @@ jobs:
           choco install nsis --yes --no-progress
           'C:\Program Files (x86)\NSIS' | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - run: npm ci
-      - name: Build native application and installer
-        run: npm run build -- -platform ${{ matrix.platform }}
+      - name: Build signed packages
+        env:
+          MYGO_UPDATER_PRIVATE_KEY: ${{ secrets.MYGO_UPDATER_PRIVATE_KEY }}
+          GH_TOKEN: ${{ github.token }}
+          REF_TYPE: ${{ github.ref_type }}
+        shell: bash
+        run: |
+          upload=''
+          if [ "$REF_TYPE" = tag ]; then
+            if [ -n "$MYGO_UPDATER_PRIVATE_KEY" ]; then upload='-upload'; else echo 'No MYGO_UPDATER_PRIVATE_KEY secret: installed apps could not update to this release.' >&2; exit 1; fi
+          fi
+          npm run build -- -platform "${{ matrix.platform }}" $upload
       - name: Archive macOS bundle with permissions
         if: runner.os == 'macOS'
         run: ditto -c -k --sequesterRsrc --keepParent build/darwin-universal/LexiGene.app build/darwin-universal/LexiGene-macos-universal.zip
@@ -98,6 +129,10 @@ jobs:
             build/${{ matrix.artifact }}/*.exe
             build/${{ matrix.artifact }}/*.dmg
             build/${{ matrix.artifact }}/*.zip
+            build/${{ matrix.artifact }}/*.delta
+            build/${{ matrix.artifact }}/update-*.json
+            build/${{ matrix.artifact }}/install.sh
+            build/SHA256SUMS
             build/${{ matrix.artifact }}/*OFL*
             build/${{ matrix.artifact }}/LICENSE
           if-no-files-found: error
@@ -150,7 +185,7 @@ jobs:
   release:
     name: Publish tagged release
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [build, android]
+    needs: [draft, build, android]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
@@ -163,12 +198,22 @@ jobs:
           path: packages
       - name: Verify downloaded APK
         run: python3 tools/verify_apk.py packages/LexiGene-android/LexiGene-android.apk
-      - name: Publish versioned packages
+      - name: Upload standalone packages and install scripts
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ github.ref_name }}
         shell: bash
         run: |
-          mapfile -d '' files < <(find packages -type f \( -name '*.deb' -o -name '*.tar.gz' -o -name '*.exe' -o -name '*.dmg' -o -name '*.zip' -o -name '*.apk' \) -print0)
-          gh release create "$RELEASE_TAG" "${files[@]}" --verify-tag --generate-notes --title "LexiGene $RELEASE_TAG"
+          # Signed builds uploaded their archives, manifests and install.sh
+          # already; this adds the disk image ZIP and the APK, and the same
+          # files again when no update key was configured.
+          mapfile -d '' files < <(find packages -type f \( -name '*.apk' -o -name '*.zip' -o -name '*.deb' -o -name '*.tar.gz' -o -name '*.exe' -o -name '*.dmg' -o -name 'install.sh' -o -name 'SHA256SUMS' -o -name 'update-*.json' -o -name '*.delta' \) -print0)
+          gh release upload "$RELEASE_TAG" "${files[@]}" --clobber
+          gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name' | sort
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: gh release edit "$RELEASE_TAG" --draft=false --latest=true

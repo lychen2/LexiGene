@@ -178,6 +178,25 @@ test('real app routes: generation, local history, grade and restored attempt', a
   expect(calls.at(-1)).toBe('grade');
 });
 
+test('a new query sends its own target and no dimensions from the visible record', async ({ page }) => {
+  await page.goto('/'); await configure(page);
+  await expect(page.getByRole('heading', { name: defaultDemo.target, exact: true })).toBeVisible();
+  let sentDraft: { target: string; dimensions: unknown; id: string } | undefined;
+  await page.route('**/api/analyze', async route => {
+    sentDraft = route.request().postDataJSON().draft;
+    await route.fulfill({
+      contentType: 'text/event-stream',
+      body: 'data: {"type":"error","dimension":"one","message":"Local request capture complete."}\n\n',
+    });
+  });
+  await page.getByRole('textbox', { name: '目标单词或短语' }).fill('dingleberry');
+  await page.getByRole('button', { name: '开始解剖', exact: true }).click();
+  await expect(page.locator('.generation-error')).toBeVisible();
+  expect(sentDraft?.target).toBe('dingleberry');
+  expect(sentDraft?.dimensions).toEqual({});
+  expect(sentDraft?.id).not.toBe(defaultDemo.id);
+});
+
 test('failed dimension resumes without regenerating completed work', async ({ page }) => {
   calls.length = 0; failTwo = true;
   try { await page.goto('/'); await configure(page); await page.getByRole('textbox', { name: '目标单词或短语' }).fill('resent'); await page.getByRole('button', { name: '开始解剖', exact: true }).click(); await expect(page.locator('.generation-error')).toBeVisible(); expect(calls).toEqual(['ping', 'one']); failTwo = false; await page.getByRole('button', { name: /重试当前维度/ }).click(); await expect(page.getByText('八个模块已就绪，开始探索吧。')).toBeVisible(); expect(calls).toEqual(['ping', 'one', 'two', 'three']); }

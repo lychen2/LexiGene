@@ -3,7 +3,7 @@
 // The routes preserve the old Next.js API contract: the same paths, request
 // bodies, status codes, cache headers and sanitized Chinese error messages.
 // Model calls are delegated to internal/llm, prompts to internal/prompts,
-// validation to internal/contracts, etymology references to internal/wiktionary
+// validation to internal/contracts, entry references to internal/wiktionary
 // and Anki packaging to internal/anki.
 package api
 

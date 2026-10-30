@@ -152,7 +152,7 @@ func (h *handler) runDimensions(ctx context.Context, request analyzeRequest, eve
 }
 
 // generateDimension runs one dimension under a single total budget. The
-// deadline covers the optional etymology lookup, the streamed model call and
+// deadline covers the optional entry lookup, the streamed model call and
 // the one repair round-trip; it is never restarted for the repair call.
 func (h *handler) generateDimension(ctx context.Context, request analyzeRequest, completed *contracts.Dimensions, dimension contracts.DimensionKey, progress func(llm.Progress)) (any, error) {
 	dimensionContext, cancel := context.WithTimeout(ctx, h.timeouts.dimension)
@@ -163,11 +163,10 @@ func (h *handler) generateDimension(ctx context.Context, request analyzeRequest,
 		Dimension: dimension,
 		Completed: *completed,
 	}
-	// Etymology references are optional and injected only into dimension one.
-	// A failed, canceled or empty lookup silently follows the normal prompt
-	// path and never fails the dimension.
+	// Word references ground dimension one in the queried entry's pronunciation
+	// and senses as well as its etymology. Failed or empty lookups remain optional.
 	if dimension == contracts.KeyOne {
-		input.References = h.etymologyReferences(dimensionContext, request.Draft.Target)
+		input.References = h.wordReferences(dimensionContext, request.Draft.Target)
 	}
 	messages := prompts.BuildDimensionMessages(input)
 
@@ -211,13 +210,13 @@ func callDimension[T any](ctx context.Context, config contracts.Config, messages
 	})
 }
 
-// etymologyReferences converts Wiktionary results into prompt references. Any
-// error or empty result is non-fatal and returns nil.
-func (h *handler) etymologyReferences(ctx context.Context, target string) []prompts.EtymologyReference {
+// wordReferences preserves the source headword and section of retrieved facts.
+// An error or empty result is non-fatal and returns nil.
+func (h *handler) wordReferences(ctx context.Context, target string) []prompts.EtymologyReference {
 	if h.wiktionary == nil {
 		return nil
 	}
-	references, err := h.wiktionary.Lookup(ctx, target)
+	references, err := h.wiktionary.LookupEntry(ctx, target)
 	if err != nil || len(references) == 0 {
 		return nil
 	}
@@ -227,9 +226,10 @@ func (h *handler) etymologyReferences(ctx context.Context, target string) []prom
 			continue
 		}
 		converted = append(converted, prompts.EtymologyReference{
-			Section: reference.Section,
-			Text:    reference.Text,
-			URL:     reference.URL,
+			Headword: reference.Headword,
+			Section:  reference.Section,
+			Text:     reference.Text,
+			URL:      reference.URL,
 		})
 	}
 	return converted

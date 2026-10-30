@@ -1,5 +1,5 @@
-// Package wiktionary retrieves English etymology references from the
-// English Wiktionary MediaWiki API.
+// Package wiktionary retrieves English lexical and etymology references
+// from the English Wiktionary MediaWiki API.
 //
 // A lookup runs against a small total budget (3 seconds by default) and
 // makes at most a bounded number of requests and returns at most a bounded
@@ -38,9 +38,8 @@ const (
 	// maxTargetRunes bounds the page title supplied by the caller.
 	maxTargetRunes = 200
 
-	// maxEtymologySections bounds how many etymology sections are retrieved
-	// from one page. Words with more than this many etymologies are truncated
-	// to the first ones in page order.
+	// maxEtymologySections bounds selected sections from one page. Lookup
+	// preserves etymology page order; LookupEntry prioritizes lexical sections.
 	maxEtymologySections = 8
 
 	// maxConcurrentSectionRequests bounds request concurrency so one lookup
@@ -76,14 +75,15 @@ type Options struct {
 	Timeout time.Duration
 }
 
-// Reference is one etymology section of a page.
+// Reference is one source section, attributed to its resolved page title.
 type Reference struct {
-	Section string `json:"section"`
-	Text    string `json:"text"`
-	URL     string `json:"url"`
+	Headword string `json:"headword,omitempty"`
+	Section  string `json:"section"`
+	Text     string `json:"text"`
+	URL      string `json:"url"`
 }
 
-// Client retrieves etymology references from a MediaWiki API. Clients are
+// Client retrieves entry references from a MediaWiki API. Clients are
 // safe for concurrent use.
 type Client struct {
 	endpoint    *url.URL
@@ -140,6 +140,18 @@ func NewClient(opts Options) *Client {
 // responses, budget exhaustion, and caller cancellation. It never returns a
 // partial result alongside an error.
 func (c *Client) Lookup(ctx context.Context, target string) ([]Reference, error) {
+	return c.lookup(ctx, target, false)
+}
+
+// LookupEntry retrieves English pronunciation, definitions and etymology.
+// Lexical sections come first so the text budget preserves the queried word's
+// identity and usage labels before its historical relations. It shares Lookup's
+// time, request and text limits and never follows links to related headwords.
+func (c *Client) LookupEntry(ctx context.Context, target string) ([]Reference, error) {
+	return c.lookup(ctx, target, true)
+}
+
+func (c *Client) lookup(ctx context.Context, target string, includeLexical bool) ([]Reference, error) {
 	if ctx == nil {
 		return nil, fmt.Errorf("wiktionary: nil context")
 	}
@@ -185,23 +197,29 @@ func (c *Client) Lookup(ctx context.Context, target string) ([]Reference, error)
 		return nil, fmt.Errorf("wiktionary: sections response has no sections list")
 	}
 
-	etymologies := englishEtymologySections(page.Sections)
-	if len(etymologies) == 0 {
+	selected := englishEtymologySections(page.Sections)
+	if includeLexical {
+		selected = englishEntrySections(page.Sections)
+	}
+	if len(selected) == 0 {
 		return nil, nil
 	}
-	if len(etymologies) > maxEtymologySections {
-		etymologies = etymologies[:maxEtymologySections]
+	if len(selected) > maxEtymologySections {
+		selected = selected[:maxEtymologySections]
 	}
 
-	texts, err := c.fetchSectionTexts(ctx, page.Title, etymologies)
+	texts, err := c.fetchSectionTexts(ctx, page.Title, selected)
 	if err != nil {
 		return nil, err
 	}
 
 	remaining := maxTotalReferenceRunes
-	references := make([]Reference, 0, len(etymologies))
-	for i, section := range etymologies {
+	references := make([]Reference, 0, len(selected))
+	for i, section := range selected {
 		paragraphs := extractEtymologyParagraphs(texts[i])
+		if !isEtymologyHeading(section.Line) {
+			paragraphs = extractLexicalParagraphs(texts[i])
+		}
 		if len(paragraphs) == 0 {
 			continue
 		}
@@ -223,9 +241,10 @@ func (c *Client) Lookup(ctx context.Context, target string) ([]Reference, error)
 		}
 		remaining -= runes
 		references = append(references, Reference{
-			Section: strings.TrimSpace(section.Line),
-			Text:    text,
-			URL:     c.referenceURL(page.Title, sectionAnchor(section)),
+			Headword: page.Title,
+			Section:  strings.TrimSpace(section.Line),
+			Text:     text,
+			URL:      c.referenceURL(page.Title, sectionAnchor(section)),
 		})
 	}
 	if len(references) == 0 {
@@ -314,6 +333,36 @@ func englishEtymologySections(sections []section) []section {
 		}
 	}
 	return selected
+}
+
+// englishEntrySections keeps lexical facts separate from etymological links.
+// Definitions can be level 4 under numbered etymologies. Language boundaries
+// still take precedence, and unrelated lists and translation sections stay out.
+func englishEntrySections(sections []section) []section {
+	var lexical, etymologies []section
+	inEnglish := false
+	for _, s := range sections {
+		level := sectionLevel(s)
+		if level == 2 {
+			if inEnglish {
+				break
+			}
+			inEnglish = strings.EqualFold(strings.TrimSpace(s.Line), "English")
+			continue
+		}
+		if !inEnglish || (level != 3 && level != 4) {
+			continue
+		}
+		switch strings.ToLower(strings.TrimSpace(s.Line)) {
+		case "pronunciation", "noun", "proper noun", "verb", "adjective", "adverb", "pronoun", "determiner", "article", "preposition", "conjunction", "interjection", "numeral", "particle", "phrase", "proverb", "idiom", "prefix", "suffix", "affix":
+			lexical = append(lexical, s)
+		default:
+			if isEtymologyHeading(s.Line) {
+				etymologies = append(etymologies, s)
+			}
+		}
+	}
+	return append(lexical, etymologies...)
 }
 
 func sectionLevel(s section) int {

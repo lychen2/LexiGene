@@ -64,7 +64,7 @@ For the latest branch build, open a successful [Actions run](https://github.com/
 | Android | Signed APK | arm64 devices and x86_64 emulators |
 
 Installed applications use Go with a native desktop window or Android WebView. They need no Node server.
-Desktop packages currently have no platform code signatures. Android releases need a consistent signing key for in-place updates.
+Desktop releases update themselves from signed GitHub releases; **Update → Check for Updates…** checks on demand. Android releases need a consistent signing key for in-place updates.
 
 ## Your first word
 
@@ -84,7 +84,8 @@ Learning records live in IndexedDB. API settings stay separate from learning rec
 Settings last for the current session unless you select **记住在本机**.
 
 The local Go service forwards model requests and credentials to your configured provider without persisting those credentials.
-English etymology lookup also contacts Wiktionary. The built-in example needs no model connection.
+English entry lookup also contacts Wiktionary for pronunciation, meanings, usage labels, and etymology.
+Source headwords and sections distinguish the queried word from its historical relatives. The built-in example needs no model connection.
 
 JSON transfers a complete analysis between browsers, desktop, and Android. Drafts, attempts, and card selections stay in their original storage profile.
 Anki cards use stable note IDs, so repeat imports can update existing notes.

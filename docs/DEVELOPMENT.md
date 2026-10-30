@@ -34,6 +34,16 @@ The Linux executable is `build/linux-amd64/lexigene`. Its `.deb` and `.tar.gz` p
 
 `tools/run-go.mjs` keeps Go modules, build caches, and temporary files inside `artifacts/`.
 
+## Auto-updates
+
+Desktop builds carry signed update manifests. `mygo.json` names the signing key's public half in `updates.publicKey` and the release repository in `updates.github`; `MYGO_UPDATER_PRIVATE_KEY` holds the private half when building, and the `MYGO_UPDATER_PRIVATE_KEY` repository secret holds it in CI.
+
+Keep `~/.config/mygo/update-keys/mygo-update.key` outside the repository, in a password manager and in CI secrets. Installed apps accept only updates signed with it, so losing it strands every installation.
+
+Each release's notes come from the matching `## <version>` section of `CHANGELOG.md`. Publish those notes before publishing the release, because the update window displays them.
+
+MyGo writes the Linux archives even without a key, but the update manifests need it: `MYGO_UPDATER_PRIVATE_KEY="$(cat path/to/mygo-update.key)" npm run build` adds `update-<platform>.json` and signed archives.
+
 ## Automated builds and releases
 
 GitHub Actions runs TypeScript, unit, Go, and browser checks on pushes and pull requests. Successful verification starts platform packaging jobs:
@@ -43,17 +53,17 @@ GitHub Actions runs TypeScript, unit, Go, and browser checks on pushes and pull 
 - Windows: amd64 executable and NSIS installer.
 - Android: signed APK with the bundled Go service for arm64 devices and x86_64 emulators.
 
-Download packages from the workflow's **Artifacts** section. Version tags such as `v0.1.1` also publish packages to GitHub Releases.
+Download packages from the workflow's **Artifacts** section. Version tags such as `v0.1.2` also publish packages to GitHub Releases.
 Before tagging, align the versions in `package.json`, `package-lock.json`, `mygo.json`, and `main.go`.
 Increase the default Android version code in `tools/build-android.mjs` for each release.
-Version 0.1.1 uses version code 2.
+Version 0.1.2 uses version code 3.
 
 ```sh
-git tag -a v0.1.1 -m "LexiGene v0.1.1"
-git push origin v0.1.1
+git tag -a v0.1.2 -m "LexiGene v0.1.2"
+git push origin v0.1.2
 ```
 
-The workflow uses pinned action commits and the Go version from `go.mod`. Desktop packages currently have no platform code signatures.
+The workflow uses pinned action commits and the Go version from `go.mod`. Desktop packages still lack platform code signatures, so macOS Gatekeeper and Windows SmartScreen may warn; update archives carry their own signatures instead.
 
 APKs are signed with a generated key unless `ANDROID_KEYSTORE_BASE64` and `ANDROID_KEYSTORE_PASSWORD` secrets hold your release key. Keep one signing key for every published version: Android refuses to install an update signed by a different key.
 

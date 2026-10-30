@@ -24,6 +24,16 @@ var invisibleRunes = strings.NewReplacer(
 // citation markers are removed. The returned paragraphs contain plain text
 // only.
 func extractEtymologyParagraphs(fragment string) []string {
+	return extractSectionParagraphs(fragment, false)
+}
+
+// Definitions and IPA are list items on Wiktionary. Keep their inline usage
+// labels while excluding nested quotations, citations and example lists.
+func extractLexicalParagraphs(fragment string) []string {
+	return extractSectionParagraphs(fragment, true)
+}
+
+func extractSectionParagraphs(fragment string, includeLists bool) []string {
 	if strings.TrimSpace(fragment) == "" {
 		return nil
 	}
@@ -53,9 +63,13 @@ func extractEtymologyParagraphs(fragment string) []string {
 			if shouldSkipNode(n) {
 				return
 			}
-			if n.Data == "p" {
+			if n.Data == "p" || (includeLists && n.Data == "li") {
 				if started {
-					if text := normalizeText(textContent(n)); text != "" {
+					content := textContent(n)
+					if includeLists {
+						content = lexicalTextContent(n)
+					}
+					if text := normalizeText(content); text != "" {
 						paragraphs = append(paragraphs, text)
 					}
 				}
@@ -137,6 +151,34 @@ func textContent(n *html.Node) string {
 			}
 		}
 		for child := n.FirstChild; child != nil; child = child.NextSibling {
+			walk(child)
+		}
+	}
+	walk(n)
+	return b.String()
+}
+
+func lexicalTextContent(n *html.Node) string {
+	var b strings.Builder
+	var walk func(*html.Node)
+	walk = func(node *html.Node) {
+		if node.Type == html.TextNode {
+			b.WriteString(node.Data)
+			return
+		}
+		if node.Type == html.ElementNode {
+			if shouldSkipNode(node) {
+				return
+			}
+			switch node.Data {
+			case "ul", "ol", "dl":
+				return
+			case "br":
+				b.WriteByte(' ')
+				return
+			}
+		}
+		for child := node.FirstChild; child != nil; child = child.NextSibling {
 			walk(child)
 		}
 	}

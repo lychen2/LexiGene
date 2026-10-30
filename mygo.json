@@ -2,7 +2,7 @@
   "name": "LexiGene",
   "slug": "lexigene",
   "identifier": "dev.lexigene.app",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "devUrl": "http://127.0.0.1:5173",
   "devCommand": "npm run dev:web",
   "buildCommand": "npm run build:web",
@@ -14,6 +14,10 @@
     "public/fonts/ReadingFont-OFL.txt",
     "LICENSE"
   ],
+  "updates": {
+    "publicKey": "D4sB/uifNVj863CWiSTA9s7yBdVGWjNfI9AbGjUVawo=",
+    "github": "lychen2/LexiGene"
+  },
   "linux": {
     "comment": "A local-first English vocabulary learning desk",
     "categories": [
