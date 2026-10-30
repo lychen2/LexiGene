@@ -201,19 +201,45 @@ jobs:
           path: packages
       - name: Verify downloaded APK
         run: python3 tools/verify_apk.py packages/LexiGene-android/LexiGene-android.apk
-      - name: Upload standalone packages and install scripts
+      - name: Upload the packages the signed builds did not
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ github.ref_name }}
         shell: bash
         run: |
-          # Signed builds uploaded their archives, manifests and install.sh
-          # already; this adds the disk image ZIP and the APK, and the same
-          # files again when no update key was configured.
-          mapfile -d '' files < <(find packages -type f \( -name '*.apk' -o -name '*.zip' -o -name '*.deb' -o -name '*.tar.gz' -o -name '*.exe' -o -name '*.dmg' -o -name 'install.sh' -o -name 'SHA256SUMS' -o -name 'update-*.json' -o -name '*.delta' \) -print0)
-          gh release upload "$RELEASE_TAG" "${files[@]}" --clobber
+          # Signed builds upload their archives, manifests and install.sh
+          # themselves; this adds what they leave out, such as the disk image
+          # ZIP and the APK, and replaces nothing, as a concurrent upload
+          # would fail.
+          gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name' > "$RUNNER_TEMP/present"
+          mapfile -d '' found < <(find packages -type f \( -name '*.apk' -o -name '*.zip' -o -name '*.deb' -o -name '*.tar.gz' -o -name '*.exe' -o -name '*.dmg' -o -name 'install.sh' -o -name 'install.ps1' -o -name 'SHA256SUMS' -o -name 'update-*.json' -o -name '*.delta' \) -print0)
+          missing=()
+          for file in "${found[@]}"; do
+            grep -Fxq "$(basename "$file")" "$RUNNER_TEMP/present" || missing+=("$file")
+          done
+          if [ ${#missing[@]} -gt 0 ]; then gh release upload "$RELEASE_TAG" "${missing[@]}"; fi
+      - name: Check the published assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
           gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name' | sort
+          for name in install.sh install.ps1 LexiGene-android.apk update-linux-amd64.json update-windows-amd64.json update-darwin-universal.json; do
+            gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name' | grep -Fxq "$name" ||
+              { echo "missing $name: installed apps could not update to this release" >&2; exit 1; }
+          done
+      - name: Use the changelog as the release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          version="${RELEASE_TAG#v}"
+          awk -v want="## $version" '$0 == want {found=1} found && /^## / && $0 != want {exit} found' CHANGELOG.md > "$RUNNER_TEMP/notes.md"
+          if [ -s "$RUNNER_TEMP/notes.md" ]; then gh release edit "$RELEASE_TAG" --notes-file "$RUNNER_TEMP/notes.md"; else echo "No CHANGELOG.md section for $version; keeping the generated notes." >&2; fi
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
