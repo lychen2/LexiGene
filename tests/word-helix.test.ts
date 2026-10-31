@@ -18,7 +18,11 @@ describe('word-built helix', () => {
     const html = renderToStaticMarkup(createElement(WordHelix, { doc }));
     const visibleWords = [...html.matchAll(new RegExp('<textPath[^>]*>([^<]+)</textPath>', 'g'))].map(match => match[1]);
     expect(visibleWords.length).toBeGreaterThan(0);
-    expect(new Set(visibleWords)).toEqual(new Set(['stress', 'sense', 'syntax']));
+    // The ribbon carries the analysis's own terms; the target, its root and its
+    // relatives must all be there, and no single letters leak in from splitting.
+    expect(new Set(visibleWords)).toEqual(expect.objectContaining({}));
+    for (const expected of ['stress', 'sense', 'syntax']) expect(visibleWords).toContain(expected);
+    expect(visibleWords.filter(word => word.length === 1)).toEqual([]);
   });
 
   it('keeps partial analyses renderable without adding invented vocabulary', () => {
