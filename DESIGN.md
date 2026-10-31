@@ -130,9 +130,23 @@ the page pays nothing for a list nobody opens.
 
 One scale, one ring, four states.
 
-- Radii: `--r-1: 6px` chips and small labels, `--r-2: 8px` controls and
-  buttons, `--r-3: 12px` cards, drawers and inputs, `--r-4: 16px` only the
-  document sheet.
+- Radii: one scale of four, on the 4px grid. `--r-1: 4px` chips, tags and
+  micro-labels; `--r-2: 8px` every control, field and button, plus the surfaces
+  nested inside a panel; `--r-3: 16px` panels — modules, the search surface, the
+  dimension rail, sidebar cards, the connect card; `--r-4: 24px` only the
+  document sheet. `--r-pill: 999px` for pills and any track that should read as
+  fully round. Nothing goes below 4 except a corner that is deliberately square
+  (a full-bleed row, a speech-bubble tail).
+- Nesting: go outside in and subtract the padding — a box p inside a container
+  with radius R gets R − p, so both corners share one centre: sheet 24 with a
+  16 inset → 8; panel 16 with an 8 inset → 8. Where the inset is larger than the
+  parent radius (our sheet insets its content by 28px), the child takes the next
+  level down instead of falling under 4. Boxes on the same level share one
+  radius.
+- Continuous corners: `corner-shape: superellipse(1.25)` under `@supports`, so
+  Chrome and Edge 139+ draw a squircle while Safari and Firefox keep the plain
+  `border-radius`. Pills and circles declare `corner-shape: round` so they stay
+  round.
 - Focus: a 2px ink-orange ring, 3px offset, on buttons, links and summaries; a
   2px green ring at 1px offset on fields. A focused field never draws a second
   border on top of the ring.
