@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
-import { ArrowRight, BookMarked, CheckCircle2, ChevronDown, Loader2, Search, Sparkles } from 'lucide-react';
+import { ArrowRight, BookMarked, CheckCircle2, ChevronDown, Loader2, Search } from 'lucide-react';
 import {
   emptyFilter, goalProgress, loadIndex, loadWords, matchesFilter,
   type WordEntry, type WordFilter, type WordGoal, type WordList, type WordListIndex,
@@ -113,6 +113,6 @@ function DeskRow({ entry, done, index, showBand, onPick }: { entry: WordEntry; d
   return <button className={`desk-row${done ? ' done' : ''}`} style={{ '--i': Math.min(index, 12) } as CSSProperties} onClick={() => onPick(entry.w)}>
     <span className="desk-row-word"><strong lang="en">{entry.w}</strong></span>
     <span className="desk-row-gloss">{entry.z}</span>
-    <span className="desk-row-meta">{done ? <span className="desk-done"><CheckCircle2 size={12} />已解剖</span> : chip ? <span className={`desk-band band-${entry.b}`}>{entry.bl}</span> : null}<Sparkles size={13} className="desk-open" /></span>
+    <span className="desk-row-meta">{done ? <span className="desk-done"><CheckCircle2 size={12} />已解剖</span> : chip ? <span className={`desk-band band-${entry.b}`}>{entry.bl}</span> : null}<span className="desk-open" aria-hidden="true">解剖<ArrowRight size={12} /></span></span>
   </button>;
 }

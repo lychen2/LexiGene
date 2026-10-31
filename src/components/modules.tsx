@@ -2,7 +2,7 @@
 
 import './register-meter.css';
 import { WordHelix } from './word-helix';
-import { useState, type KeyboardEvent, type ReactNode } from 'react';
+import { Fragment, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { ArrowDown, ArrowRight, Check, ChevronDown, Copy, CornerDownRight, Feather, Flame, GitBranch, Layers3, MessageCircle, Microscope, MoveUpRight, Sparkles, Thermometer, Users, X } from 'lucide-react';
 import type { AnalysisDocument, AnalysisDraft, Example, GenerationProgress } from '@/lib/schema';
 
@@ -10,9 +10,22 @@ export const moduleNames = ['词源与演化', '同源词', '核心词义', '近
 export const dimensionNames = ['词源与同源词', '词义与近义词', '用法与练习'];
 export const moduleIcons = [GitBranch, Sparkles, Microscope, Layers3, Thermometer, Feather, CornerDownRight, MessageCircle];
 
+// One line of orientation per module, so a reader knows what the block is for
+// before reading it.
+const moduleHints = [
+  '从哪儿来，一路上经历了什么',
+  '同一个词根下的亲属',
+  '它真正在说什么',
+  '近义词之间的分界在哪里',
+  '什么场合才用它',
+  '它习惯和谁一起出现',
+  '最容易错在哪',
+  '放进真实对话里练',
+];
+
 export function Section({ number, title, children, className = '', action }: { number: number; title: string; children: ReactNode; className?: string; action?: ReactNode }) {
   return <section id={`module-${number}`} className={`module ${className}`} data-reveal="" style={{ '--reveal-delay': `${(number % 3) * 60}ms` } as React.CSSProperties}>
-    <header className="module-heading"><div className="module-number">{String(number).padStart(2, '0')}</div><div><h3>{title}</h3></div>{action && <div className="module-action">{action}</div>}</header>
+    <header className="module-heading"><div className="module-number">{String(number).padStart(2, '0')}</div><div><h3>{title}</h3>{moduleHints[number - 1] && <p>{moduleHints[number - 1]}</p>}</div>{action && <div className="module-action">{action}</div>}</header>
     {children}
   </section>;
 }
@@ -119,7 +132,7 @@ export function LoadingDimension({ label, state, error, progress, onResume, onPa
 }
 export function WordHero({ doc, isDemo }: { doc: AnalysisDraft; isDemo: boolean }) {
   const one = doc.dimensions.one;
-  return <div className="word-hero" data-reveal=""><div className="word-hero-main"><div className="hero-kicker"><span className="live-dot" />{isDemo ? '示例' : '词条'}<span className="hero-language">{doc.language}</span></div><div className="word-title-row"><h1 lang="en">{doc.target}</h1>{one && <span className="part-of-speech">{one.overview.partOfSpeech}</span>}</div>{one && <><p className="pronunciation">{one.overview.pronunciation}</p><h2>{one.overview.core}</h2><p className="hero-definition">{one.overview.definition}</p></>}</div><div className="hero-art"><WordHelix doc={doc} /></div></div>;
+  return <div className="word-hero" data-reveal=""><div className="word-hero-main"><div className="hero-kicker"><span className="live-dot" />{isDemo ? '示例' : '词条'}<span className="hero-language">{doc.language}</span></div><div className="word-title-row"><h1 lang="en">{doc.target}</h1>{one && <span className="part-of-speech">{one.overview.partOfSpeech}</span>}</div>{one && <><p className="pronunciation">{one.overview.pronunciation.split(/\s+/).map((token, i) => <Fragment key={i}>{i > 0 && ' '}<span>{token}</span></Fragment>)}</p><h2>{one.overview.core}</h2><p className="hero-definition">{one.overview.definition}</p></>}</div><div className="hero-art"><WordHelix doc={doc} /></div></div>;
 }
 export function DimensionContent({ doc, index, onAdd, sandbox, state, error, progress, onResume, onPause }: { doc: AnalysisDraft; index: number; onAdd: (phrase: string) => void; sandbox: ReactNode; state: DimensionLoadState; error?: string; progress?: GenerationProgress; onResume?: () => void; onPause?: () => void }) {
   const loading = <LoadingDimension label={['正在挖掘词源与同源关系…', '正在描绘独立概念坐标…', '正在构建真实语境与练习…'][index]} state={state} error={error} progress={progress} onResume={onResume} onPause={onPause} />;

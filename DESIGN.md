@@ -125,3 +125,27 @@ the page pays nothing for a list nobody opens.
   it varies, and exam lists never repeat the same chip on every row.
 - The source, its licence and what was excluded are named in the drawer: a
   learner should know where a list came from.
+
+## Control language
+
+One scale, one ring, four states.
+
+- Radii: `--r-1: 6px` chips and small labels, `--r-2: 8px` controls and
+  buttons, `--r-3: 12px` cards, drawers and inputs, `--r-4: 16px` only the
+  document sheet.
+- Focus: a 2px ink-orange ring, 3px offset, on buttons, links and summaries; a
+  2px green ring at 1px offset on fields. A focused field never draws a second
+  border on top of the ring.
+- States: hover changes surface, active moves 1px and deepens, disabled loses
+  its shadow and desaturates. Nothing changes size on hover.
+- Type floor: 11px for anything read in a panel, 12px for supporting text,
+  13–14px for controls and labels, 15px for reading. Decorative micro-labels
+  may go to 9–10px but never carry an instruction.
+- Numerals are tabular wherever a reader compares figures: module numbers,
+  counts, scores, timers, list indices.
+- Chips (language, part of speech, rarity, filter) share one shape: 6px radius,
+  1px border, 11–12px label, no shadow. A chip never looks clickable unless it
+  is.
+- Lists show the next action on hover or focus, not as a permanent icon on
+  every row; touch shows it at reduced opacity.
+- Phonetic lines wrap between tokens, never inside one.
