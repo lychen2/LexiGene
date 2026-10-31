@@ -1,5 +1,7 @@
 package contracts
 
+import "strings"
+
 // DimensionKey names one of the three sequential analysis dimensions.
 type DimensionKey string
 
@@ -233,13 +235,26 @@ type Dimensions struct {
 }
 
 // Draft is the versioned analysis draft sent to the analyze endpoint.
+// Language names the target language and variety; Explain names the language
+// its teaching copy is written in, and is empty in records saved before it
+// existed.
 type Draft struct {
 	SchemaVersion int        `json:"schemaVersion"`
 	ID            string     `json:"id"`
 	CreatedAt     string     `json:"createdAt"`
 	Target        string     `json:"target"`
 	Language      string     `json:"language"`
+	Explain       string     `json:"explain,omitempty"`
 	Dimensions    Dimensions `json:"dimensions"`
+}
+
+// ExplainLanguage returns the stored explanation language, defaulting to the
+// original Simplified Chinese for records that predate the field.
+func (d Draft) ExplainLanguage() string {
+	if value := strings.TrimSpace(d.Explain); value != "" {
+		return value
+	}
+	return "简体中文"
 }
 
 // Scores are the three grade dimensions.

@@ -1,7 +1,21 @@
 {
-  "source": "ECDICT",
-  "sourceUrl": "https://github.com/skywind3000/ECDICT",
-  "license": "MIT",
+  "sources": [
+    {
+      "name": "ECDICT",
+      "url": "https://github.com/skywind3000/ECDICT",
+      "license": "MIT"
+    },
+    {
+      "name": "OpenJLPT",
+      "url": "https://github.com/evanclan/OpenJLPT",
+      "license": "CC BY-SA 4.0"
+    },
+    {
+      "name": "complete-hsk-vocabulary",
+      "url": "https://github.com/drkameleon/complete-hsk-vocabulary",
+      "license": "MIT"
+    }
+  ],
   "excluded": {
     "label": "四级及以下与日常高频词"
   },
@@ -9,37 +23,92 @@
     {
       "slug": "idioms",
       "label": "地道表达",
+      "lang": "en",
       "description": "阅读里学不到的俚语、习语和职场行话",
       "count": 74,
-      "bytes": 9413
+      "bytes": 9473,
+      "source": "LexiGene",
+      "license": "MIT"
     },
     {
       "slug": "kaoyan",
       "label": "考研",
+      "lang": "en",
       "description": "硕士研究生入学考试大纲词汇，去掉四级及以下",
       "count": 1122,
-      "bytes": 96792
+      "bytes": 96906,
+      "source": "ECDICT",
+      "license": "MIT"
     },
     {
       "slug": "ielts",
       "label": "雅思",
+      "lang": "en",
       "description": "雅思常见词汇，去掉四级及以下",
       "count": 1861,
-      "bytes": 161664
+      "bytes": 161777,
+      "source": "ECDICT",
+      "license": "MIT"
     },
     {
       "slug": "toefl",
       "label": "托福",
+      "lang": "en",
       "description": "托福常见词汇，去掉四级及以下",
       "count": 4066,
-      "bytes": 353984
+      "bytes": 354097,
+      "source": "ECDICT",
+      "license": "MIT"
     },
     {
       "slug": "gre",
       "label": "GRE",
+      "lang": "en",
       "description": "GRE 常见词汇，去掉四级及以下",
       "count": 6006,
-      "bytes": 523088
+      "bytes": 523199,
+      "source": "ECDICT",
+      "license": "MIT"
+    },
+    {
+      "slug": "ja-n1",
+      "label": "JLPT N1",
+      "lang": "ja",
+      "description": "日本语能力测试 N1 词汇",
+      "count": 3070,
+      "bytes": 163990,
+      "source": "OpenJLPT",
+      "license": "CC BY-SA 4.0"
+    },
+    {
+      "slug": "ja-n2",
+      "label": "JLPT N2",
+      "lang": "ja",
+      "description": "日本语能力测试 N2 词汇",
+      "count": 1778,
+      "bytes": 94801,
+      "source": "OpenJLPT",
+      "license": "CC BY-SA 4.0"
+    },
+    {
+      "slug": "zh-hsk5",
+      "label": "HSK 5",
+      "lang": "zh",
+      "description": "HSK 5 级词汇",
+      "count": 1059,
+      "bytes": 52469,
+      "source": "complete-hsk-vocabulary",
+      "license": "MIT"
+    },
+    {
+      "slug": "zh-hsk6",
+      "label": "HSK 6",
+      "lang": "zh",
+      "description": "HSK 6 级词汇",
+      "count": 1123,
+      "bytes": 55965,
+      "source": "complete-hsk-vocabulary",
+      "license": "MIT"
     }
   ]
 }

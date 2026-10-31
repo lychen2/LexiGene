@@ -28,6 +28,7 @@ export interface QuizScenarioProps {
   config: ApiConfig;
   target: string;
   language: string;
+  explain?: string;
   onHints: (hints: VocabularyHint[]) => void;
 }
 
@@ -111,7 +112,7 @@ interface ActiveHint {
 
 type HintsStatus = 'idle' | 'loading' | 'done' | 'error';
 
-export function QuizScenario({ question, config, target, language, onHints }: QuizScenarioProps) {
+export function QuizScenario({ question, config, target, language, explain, onHints }: QuizScenarioProps) {
   const [visible, setVisible] = useState(false);
   const [status, setStatus] = useState<HintsStatus>('idle');
   const [fetchedHints, setFetchedHints] = useState<VocabularyHint[] | null>(null);
@@ -178,11 +179,12 @@ export function QuizScenario({ question, config, target, language, onHints }: Qu
         question.challenge,
         target,
         language,
+        explain,
         config.baseUrl,
         config.apiKey,
         config.model,
       ]),
-    [question.id, question.scenario, question.challenge, target, language, config.baseUrl, config.apiKey, config.model],
+    [question.id, question.scenario, question.challenge, target, language, explain, config.baseUrl, config.apiKey, config.model],
   );
 
   const suppliedHintsKey = useMemo(
@@ -222,6 +224,7 @@ export function QuizScenario({ question, config, target, language, onHints }: Qu
       config,
       target,
       language,
+      explain,
       question: { id: question.id, scenario: question.scenario, challenge: question.challenge },
     };
 

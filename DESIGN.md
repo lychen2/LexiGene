@@ -149,3 +149,26 @@ One scale, one ring, four states.
 - Lists show the next action on hover or focus, not as a permanent icon on
   every row; touch shows it at reduced opacity.
 - Phonetic lines wrap between tokens, never inside one.
+
+## Languages and scripts
+
+The sheet is written in a language the learner picks, so its type cannot be
+fixed. `src/lib/languages.ts` pairs each language with a script, a direction and
+its varieties; `src/app/globals.css` turns the script into type.
+
+- One class per script (`data-script="kana"` and so on) sets the display family,
+  the hero size, the tracking and the reading line-height. Latin keeps the
+  bundled serif; every other script starts its own fallback chain, because a
+  Latin-only face would otherwise render mixed-font words.
+- Sizes follow the script's density: Latin 88px, Han 66, Kana 62, Hangul 60,
+  Arabic 54, Devanagari and Thai 52 — clamps on phones keep the longest word on
+  one line.
+- Right-to-left text uses `unicode-bidi: plaintext` on the word and its examples,
+  so an Arabic line sits right-to-left while the Chinese explanation beneath it
+  does not, and the surrounding layout never flips.
+- Three languages stay independent: the studied language, the explanation
+  language written into the record, and the interface locale. Switching the
+  interface does not rewrite old analyses.
+
+Interface copy lives in `src/lib/i18n.ts`, keyed by its Chinese source text, so
+an untranslated string stays readable instead of blank.

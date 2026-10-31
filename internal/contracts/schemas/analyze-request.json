@@ -48,6 +48,9 @@
           "type": "string",
           "minLength": 1
         },
+        "explain": {
+          "type": "string"
+        },
         "dimensions": {
           "type": "object",
           "properties": {

@@ -18,6 +18,7 @@ type quizHintsRequest struct {
 	Config   contracts.Config `json:"config"`
 	Target   string           `json:"target"`
 	Language string           `json:"language"`
+	Explain  string           `json:"explain"`
 	Question hintQuestion     `json:"question"`
 }
 
@@ -68,6 +69,7 @@ func (h *handler) quizHints(response http.ResponseWriter, request *http.Request)
 		Messages: prompts.BuildHintMessages(prompts.HintPromptInput{
 			Target:   parsed.Target,
 			Language: parsed.Language,
+			Explain:  parsed.Explain,
 			Question: prompts.HintQuestion{
 				ID:        parsed.Question.ID,
 				Scenario:  parsed.Question.Scenario,

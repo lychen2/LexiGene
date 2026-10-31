@@ -17,6 +17,7 @@ type gradeRequest struct {
 	Config   contracts.Config       `json:"config"`
 	Target   string                 `json:"target"`
 	Language string                 `json:"language"`
+	Explain  string                 `json:"explain"`
 	Question contracts.QuizQuestion `json:"question"`
 	Answer   string                 `json:"answer"`
 	Context  gradeRequestContext    `json:"context"`
@@ -38,6 +39,7 @@ func (h *handler) grade(response http.ResponseWriter, request *http.Request) {
 	trimConfigBaseURL(value)
 	if object, ok := objectOf(value); ok {
 		trimStringField(object, "target")
+		trimStringField(object, "explain")
 		trimStringField(object, "language")
 		trimStringField(object, "answer")
 	}
@@ -73,6 +75,7 @@ func (h *handler) grade(response http.ResponseWriter, request *http.Request) {
 		Messages: prompts.BuildGradeMessages(prompts.GradePromptInput{
 			Target:   parsed.Target,
 			Language: parsed.Language,
+			Explain:  parsed.Explain,
 			Question: parsed.Question,
 			Answer:   parsed.Answer,
 			Context:  context,

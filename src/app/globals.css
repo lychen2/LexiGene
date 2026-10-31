@@ -584,6 +584,9 @@ input[type=checkbox] { accent-color: var(--green); width: 17px; height: 17px; fl
 
 /* ---------- word desk ---------- */
 .word-desk { padding: 22px 33px 40px; }
+.desk-groups { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+.desk-groups .desk-goal { border-color: #d5dfc9; background: #f4f6ec; }
+.desk-groups .desk-goal.active { background: #e2ead8; border-color: #b3c5a4; }
 .desk-goals { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
 .desk-goal { display: flex; align-items: baseline; gap: 7px; padding: 8px 13px; min-height: 44px; border: 1px solid #dfe5d7; border-radius: 8px; background: #fbfbf5; transition: background var(--dur-1) ease, border-color var(--dur-1) ease, color var(--dur-1) ease; }
 .desk-goal strong { font-size: 13px; font-weight: 500; color: #4f6349; }
@@ -655,3 +658,45 @@ input[type=checkbox] { accent-color: var(--green); width: 17px; height: 17px; fl
 .word-hero .hero-art { animation: art-in .8s var(--ease) both; }
 @keyframes art-in { from { opacity: 0; transform: scale(.985); } }
 @media (prefers-reduced-motion: reduce) { .word-helix svg, .live-dot, .word-hero .hero-art { animation: none; } }
+
+/* ---------- scripts ----------
+   The bundled Latin serif cannot draw other scripts, so each script brings its
+   own family. The class sits on the sheet; the hero follows it. */
+.sheet-target { --display: var(--serif); --hero-size: 88px; --hero-tracking: -3px; --reading-lh: 1.95; }
+.sheet-target[data-script="han"] { --display: 'Noto Serif CJK SC', 'Source Han Serif SC', 'Songti SC', 'SimSun', var(--serif); --hero-size: 66px; --hero-tracking: .02em; --reading-lh: 1.95; }
+.sheet-target[data-script="kana"] { --display: 'Noto Serif CJK JP', 'Yu Mincho', 'Hiragino Mincho ProN', 'MS Mincho', var(--serif); --hero-size: 62px; --hero-tracking: .04em; --reading-lh: 2; }
+.sheet-target[data-script="hangul"] { --display: 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', var(--sans); --hero-size: 60px; --hero-tracking: 0; --reading-lh: 1.95; }
+.sheet-target[data-script="arabic"] { --display: 'Noto Naskh Arabic', 'Geeza Pro', 'Traditional Arabic', 'Segoe UI', serif; --hero-size: 54px; --hero-tracking: 0; --reading-lh: 2; }
+.sheet-target[data-script="hebrew"] { --display: 'Noto Serif Hebrew', 'Times New Roman', serif; --hero-size: 58px; --hero-tracking: 0; --reading-lh: 1.95; }
+.sheet-target[data-script="devanagari"] { --display: 'Noto Serif Devanagari', 'Kohinoor Devanagari', 'Mangal', var(--serif); --hero-size: 52px; --hero-tracking: 0; --reading-lh: 2.05; }
+.sheet-target[data-script="thai"] { --display: 'Noto Serif Thai', Thonburi, 'Leelawadee UI', var(--serif); --hero-size: 54px; --hero-tracking: 0; --reading-lh: 2.05; }
+.sheet-target[data-script="cyrillic"], .sheet-target[data-script="greek"] { --display: 'Noto Serif', 'PT Serif', Georgia, var(--serif); --hero-size: 76px; --hero-tracking: -1.5px; }
+.sheet-target[data-script="bengali"], .sheet-target[data-script="tamil"],
+.sheet-target[data-script="telugu"], .sheet-target[data-script="kannada"],
+.sheet-target[data-script="malayalam"] { --display: 'Noto Serif Bengali', 'Noto Serif Tamil', 'Noto Serif Telugu', 'Noto Serif Kannada', 'Noto Serif Malayalam', var(--serif); --hero-size: 50px; --hero-tracking: 0; --reading-lh: 2.05; }
+.sheet-target .word-title-row h1 { font-family: var(--display); font-size: var(--hero-size); letter-spacing: var(--hero-tracking); line-height: 1.16; }
+.sheet-target .word-hero h2, .sheet-target .hero-definition { line-height: var(--reading-lh); }
+.sheet-target .example p, .sheet-target .dialogue .speech p, .sheet-target .reference-answer p { font-family: var(--display); }
+/* Each paragraph follows its own first strong character, so an Arabic
+   example sits right-to-left while the Chinese explanation below it does not,
+   and the surrounding layout keeps its direction. */
+.sheet-target .word-title-row h1, .sheet-target .example p, .sheet-target .dialogue .speech p,
+.sheet-target .reference-answer p, .sheet-target .pronunciation, .sheet-target .chunk-content h4 {
+  unicode-bidi: plaintext;
+}
+.sheet-target.is-rtl .word-title-row h1, .sheet-target.is-rtl .word-title-row { align-items: flex-start; }
+.sheet-target.is-rtl .example p, .sheet-target.is-rtl .dialogue .speech p { text-align: right; }
+@media (max-width: 760px) { .sheet-target { --hero-size: 64px; } }
+/* One clamp for every script on phones: the longest word in any list still fits
+   on a single line at 390px. */
+@media (max-width: 500px) { .sheet-target .word-title-row h1 { font-size: clamp(30px, 11vw, 56px); } }
+.desk-reading { font-size: 11px; color: #8b9a80; letter-spacing: .2px; }
+
+.language-settings { margin-bottom: 26px; padding-bottom: 20px; border-bottom: 1px dashed #e6eada; }
+.language-settings h3 { font: 600 14px var(--sans); color: #3f5638; margin-bottom: 14px; }
+.language-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.lang-field { display: block; font-size: 13px; font-weight: 500; letter-spacing: .1px; color: #43593c; margin-bottom: 14px; }
+.lang-field select { width: 100%; min-height: 44px; margin-top: 8px; border: 1px solid #d7dfcd; border-radius: var(--r-2); background: #fdfdf8; padding: 8px 10px; font-size: 13px; font-weight: 400; }
+.language-settings select { width: 100%; }
+.language-note { font-size: 11px; color: #93a08b; letter-spacing: .2px; }
+@media (max-width: 520px) { .language-row { grid-template-columns: 1fr; gap: 0; } }

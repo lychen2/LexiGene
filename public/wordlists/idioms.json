@@ -522,5 +522,8 @@
       "b": 2,
       "bl": "俚语"
     }
-  ]
+  ],
+  "source": "LexiGene",
+  "license": "MIT",
+  "lang": "en"
 }

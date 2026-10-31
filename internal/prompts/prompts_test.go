@@ -82,7 +82,7 @@ func TestDimensionPromptsKeepOriginalInstructions(t *testing.T) {
 
 	for _, expected := range []string{
 		"八个分析模块", "不要免责声明", "记忆联想", "禁止伪造文献", "禁止强行语域等价",
-		"目标英语变体：" + draft.Language, "解释语言：简体中文",
+		"目标语言与变体：" + draft.Language, "解释语言：简体中文",
 	} {
 		if !strings.Contains(system, expected) {
 			t.Fatalf("system prompt missing %q", expected)
@@ -220,7 +220,7 @@ func TestGradePromptFramesAnswerAsData(t *testing.T) {
 	user := messages[1].Content
 
 	for _, expected := range []string{
-		"naturalness", "usesTarget", "不要免责声明", "目标英语变体：美式英语",
+		"naturalness", "usesTarget", "不要免责声明", "目标语言与变体：美式英语",
 		"反馈语言：简体中文", "correction.zh 全部使用简体中文", "记忆联想",
 	} {
 		if !strings.Contains(system, expected) {
@@ -245,5 +245,34 @@ func TestGradePromptFramesAnswerAsData(t *testing.T) {
 		if !strings.Contains(withoutContext, expected) {
 			t.Fatalf("empty context missing %q", expected)
 		}
+	}
+}
+
+func TestPromptFollowsStudiedLanguageAndExplanationLanguage(t *testing.T) {
+	draft := contracts.Draft{Target: "相変わらず", Language: "日语（标准语（东京））", Explain: "English"}
+	system := BuildDimensionMessages(DimensionPromptInput{Draft: draft, Dimension: contracts.KeyOne})[0].Content
+	for _, expected := range []string{
+		"目标语言与变体：日语（标准语（东京））",
+		"解释语言：English",
+		"用假名写读音",
+		"English译文使用English",
+	} {
+		if !strings.Contains(system, expected) {
+			t.Fatalf("system prompt missing %q\n%s", expected, system)
+		}
+	}
+	for _, unexpected := range []string{"解释语言：简体中文", "按美式英语处理。所有 en 字段"} {
+		if strings.Contains(system, unexpected) {
+			t.Fatalf("system prompt still assumes English and Chinese: %q", unexpected)
+		}
+	}
+
+	// A record saved before the field existed keeps the original default.
+	legacy := BuildDimensionMessages(DimensionPromptInput{Draft: contracts.Draft{Target: "nostalgia", Language: "美式英语"}, Dimension: contracts.KeyOne})[0].Content
+	if !strings.Contains(legacy, "解释语言：简体中文") {
+		t.Fatal("legacy draft lost its default explanation language")
+	}
+	if !strings.Contains(legacy, "用国际音标标注") {
+		t.Fatal("Latin-script target should be asked for IPA")
 	}
 }

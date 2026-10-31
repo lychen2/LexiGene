@@ -12,6 +12,80 @@ import (
 	"lexigene/internal/llm"
 )
 
+// Languages names the pair a prompt is written for: the language being
+// studied (with its variety) and the language its teaching copy is written in.
+type Languages struct {
+	// Target is the studied language and variety, e.g. 日语（标准语（东京））.
+	Target string
+	// Explain is the language of every explanation, e.g. 简体中文.
+	Explain string
+}
+
+// LanguagesFor reads the pair from a draft, defaulting an older record to
+// Simplified Chinese explanations and to the label the record already stored.
+func LanguagesFor(draft contracts.Draft) Languages {
+	target := strings.TrimSpace(draft.Language)
+	if target == "" {
+		target = "英语（美式英语）"
+	}
+	return Languages{Target: target, Explain: draft.ExplainLanguage()}
+}
+
+// speak rewrites the Chinese instructions so the roles follow the pair. The
+// prompt itself stays in Chinese, which the model reads reliably; only the
+// language names inside it change.
+func (l Languages) speak(text string) string {
+	replacer := strings.NewReplacer(
+		"简体中文译文", l.Explain+"译文",
+		"简体中文", l.Explain,
+		"常见中文对应", "常见"+l.Explain+"对应",
+		"中文对应", l.Explain+"对应",
+		"简短中文", "简短"+l.Explain,
+		"中文词语", l.Explain+"词语",
+		"中文写作情境", l.Explain+"写作情境",
+		"中文核心义", l.Explain+"核心义",
+		"中文译文", l.Explain+"译文",
+		"英汉双语", l.Target+"—"+l.Explain+"双语",
+		"英语词汇学", "该语言的词汇学",
+		"目标英语变体", "目标语言与变体",
+		"英文必须使用指定的目标英语变体", "目标语言文本必须使用指定语言与变体的自然写法",
+		"英文示例", "目标语言示例",
+		"英文对应", "目标语言对应",
+		"简洁英文", "简洁的目标语言表达",
+		"英文只出现在", "目标语言只出现在",
+		"按美式英语处理", "一律按 "+l.Target+" 的自然用法处理",
+	)
+	return replacer.Replace(text)
+}
+
+// pronunciationSpec states how the studied language writes its reading, so an
+// analysis of Japanese is not asked for IPA.
+func pronunciationSpec(target string) string {
+	switch {
+	case strings.Contains(target, "日语"):
+		return "用假名写读音，并在括号内给出赫本式罗马字；音调只在有必要时用数字标出"
+	case strings.Contains(target, "中文"):
+		return "用带声调符号的拼音，并在括号内给出注音符号"
+	case strings.Contains(target, "韩语"):
+		return "用韩文写读音，并给出罗马字（文观部式）"
+	case strings.Contains(target, "阿拉伯语"):
+		return "用阿拉伯文写读音，并用拉丁转写标注，不使用 IPA"
+	case strings.Contains(target, "希伯来语"):
+		return "用希伯来文写读音，并用拉丁转写标注，不使用 IPA"
+	case strings.Contains(target, "印地语"), strings.Contains(target, "孟加拉语"), strings.Contains(target, "泰米尔语"), strings.Contains(target, "泰卢固语"), strings.Contains(target, "卡纳达语"), strings.Contains(target, "马拉雅拉姆语"):
+		return "用天城文等原有文字写读音，并给出拉丁转写"
+	case strings.Contains(target, "泰语"):
+		return "用泰文写读音，并给出拉丁转写"
+	case strings.Contains(target, "俄语"), strings.Contains(target, "乌克兰语"):
+		return "用西里尔字母写读音并标出重音，必要时附国际音标"
+	case strings.Contains(target, "希腊语"):
+		return "用希腊字母写读音并标出重音，必要时附国际音标"
+	case strings.Contains(target, "英语"), strings.Contains(target, "西班牙语"), strings.Contains(target, "法语"), strings.Contains(target, "德语"), strings.Contains(target, "葡萄牙语"), strings.Contains(target, "意大利语"), strings.Contains(target, "荷兰语"), strings.Contains(target, "瑞典语"), strings.Contains(target, "挪威语"), strings.Contains(target, "丹麦语"), strings.Contains(target, "芬兰语"), strings.Contains(target, "波兰语"), strings.Contains(target, "捷克语"), strings.Contains(target, "罗马尼亚语"), strings.Contains(target, "土耳其语"), strings.Contains(target, "印尼语"), strings.Contains(target, "马来语"), strings.Contains(target, "菲律宾语"), strings.Contains(target, "越南语"), strings.Contains(target, "斯瓦希里语"), strings.Contains(target, "南非荷兰语"), strings.Contains(target, "匈牙利语"):
+		return "用国际音标标注，并标出主重音"
+	}
+	return "用该语言通行的注音方式标注读音"
+}
+
 const moduleMap = "产品共八个分析模块：源流 origin、血脉 bloodline、概念 concept、辨析 nuance、语域 register、语块 chunks、易错 pitfalls、实战 slices；overview 是核心档案。"
 
 // clip collapses whitespace and truncates to max UTF-16 code units, matching
@@ -154,22 +228,29 @@ func summarizeDimensions(dimensions contracts.Dimensions) string {
 	return strings.Join(filtered, "\n")
 }
 
-const ironRules = `铁律：
+func ironRulesFor(l Languages) string {
+	return l.speak(`铁律：
 1. 严格按给定 JSON Schema 输出；不要输出 Markdown 代码围栏、标题、列表符号、注释或 JSON 之外的任何文字。
 2. 禁止任何免责声明、能力说明、使用提醒、元评论、客套话或“作为 AI”“以下是我的分析”之类内容。用户明确要求：不要免责声明。
 3. 事实、历史推测与学习隐喻必须区分：资料中的 possibly、perhaps、uncertain 等限定须保留为“可能”“尚不确定”；学习隐喻单独标为“记忆联想/记忆画面”。不得把推测写成定论，也不得把记忆画面用作词源证据。
 4. 禁止伪造文献、来源、引用、语料库数据或统计；禁止编造同源词、词根或跨语言同源关系。没有可靠同源词时，cognates 返回空数组。
 5. 禁止强行语域等价：不得声称两个词在语域、语气、场合或情感色彩上完全等价；分数和解释要反映真实差异与使用边界，但不要为了制造差异而虚抬或压低分数。
-6. 内容要具体、可感知、可教学；例句自然地道，英文必须使用指定的目标英语变体，中文译文使用简体中文并准确对应，避免空泛套话。
+6. 内容要具体、可感知、可教学；例句自然地道，目标语言文本必须使用指定的目标语言与变体，简体中文译文使用简体中文并准确对应，避免空泛套话。
 7. 枚举只能使用 schema 允许的字面量；整数必须落在允许范围；数组数量、唯一性和层级完整性必须满足。
 8. 与前序维度保持一致；不要重复生成已完成维度，不要与其结论矛盾。
-9. 分析主体始终是目标词的原始拼写。音标、释义和现代用法属于目标词；词根、同源词和词源前身各有自己的身份。“X is an alteration of Y”只说明 X 与 Y 的词源关系；分析 X 时，说明这一关系后继续解释 X。多个义项须区分使用场合，后续维度围绕 overview 选定的学习义项展开。`
+9. 分析主体始终是目标词的原始拼写。音标、释义和现代用法属于目标词；词根、同源词和词源前身各有自己的身份。“X is an alteration of Y”只说明 X 与 Y 的词源关系；分析 X 时，说明这一关系后继续解释 X。多个义项须区分使用场合，后续维度围绕 overview 选定的学习义项展开。`)
+}
 
-func dimensionTask(dimension contracts.DimensionKey, variant string) string {
+func dimensionTask(dimension contracts.DimensionKey, lang Languages) string {
+	text := dimensionTaskText(dimension, lang)
+	return lang.speak(text)
+}
+
+func dimensionTaskText(dimension contracts.DimensionKey, lang Languages) string {
 	if dimension == contracts.KeyOne {
 		return strings.Join([]string{
 			"本次只填写 overview、origin、bloodline。",
-			fmt.Sprintf("- overview.pronunciation：按%s标注 IPA 音标并标出主重音；若该变体读音有明显差异，用简短中文注明。overview.core：一句话中文核心义；overview.definition：用简体中文写精炼解释，说明核心含义与使用范围；有多个义项时，交代当代日常义、粗俗或贬义用法与专门义的区别，再选定本次重点。词典排列顺序和词源前身的释义不能代替使用场合判断。不要写英文词典式释义；overview.partOfSpeech：用 n. / v. / adj. 等标准词性缩写。", variant),
+			fmt.Sprintf("- overview.pronunciation：%s；若该变体读音有明显差异，用简短中文注明。overview.core：一句话中文核心义；overview.definition：用简体中文写精炼解释，说明核心含义与使用范围；有多个义项时，交代当代日常义、粗俗或贬义用法与专门义的区别，再选定本次重点。词典排列顺序和词源前身的释义不能代替使用场合判断。不要写英文词典式释义；overview.partOfSpeech：用 n. / v. / adj. 等标准词性缩写。", pronunciationSpec(lang.Target)),
 			"- origin.story：用简体中文说明目标词有依据的词源关系，分清目标词、词源前身及构词成分。保留来源中的不确定性；一个词是另一词的变体，不能单凭拼写将它拆成后者的词根。资料未说明的命名原因须留作未知，形象化联想放入 physicalImage。",
 			"- origin.physicalImage：用简体中文给出一个具体、可视化、能帮助记忆的意象。",
 			"- origin.evolution：2–4 个有依据的演变阶段，按时间或已知词源关系排序；资料只有“来源关系 → 当代用法”时就写两个阶段，不补造中间历史。每项含唯一 id、label、period、meaning、connection、example{en,zh}；label、period、meaning、connection 一律用简体中文。历史阶段可说明前身词，但须标明该阶段词形；末阶段回到目标词。不同现代义项本身不证明先后演变关系。",
@@ -203,6 +284,15 @@ func dimensionTask(dimension contracts.DimensionKey, variant string) string {
 	}, "\n")
 }
 
+// explainOrDefault keeps prompts readable when a request omits the language
+// its copy should be written in.
+func explainOrDefault(value string) string {
+	if trimmed := strings.TrimSpace(value); trimmed != "" {
+		return trimmed
+	}
+	return "简体中文"
+}
+
 // EtymologyReference carries a source headword and one English entry section.
 // Pronunciation, senses and etymology remain separately attributed reference data.
 type EtymologyReference struct {
@@ -224,19 +314,21 @@ type DimensionPromptInput struct {
 // dimension. Retrieved entry references are injected only for dimension one,
 // and only when a lookup returned usable text.
 func BuildDimensionMessages(input DimensionPromptInput) []llm.Message {
+	lang := LanguagesFor(input.Draft)
 	summary := summarizeDimensions(input.Completed)
 	if summary == "" {
 		summary = "（暂无已完成维度）"
 	}
 
-	system := strings.Join([]string{
-		"你是「词汇全息解剖」的首席内容专家，兼具英语词汇学、认知语言学、语料库语言学和英汉双语教学经验。",
+	system := lang.speak(strings.Join([]string{
+		"你是「词汇全息解剖」的首席内容专家，兼具目标语言的词汇学、认知语言学与语料库语言学功底，以及面向成年学习者的教学经验。",
 		"目标词：" + input.Draft.Target,
-		"目标英语变体：" + input.Draft.Language + "。所有 en 字段（例句、短语、对话、参考句）都使用该变体的自然拼写与用法；若未特别说明，按美式英语处理。",
+		"目标英语变体：" + lang.Target + "。所有 en 字段（例句、短语、对话、参考句）都使用该语言与该变体的自然写法，不要混入其他变体的拼写或词汇；若未特别说明，按美式英语处理。",
 		"解释语言：简体中文。除 en 字段、目标词、候选词和短语本身外，所有说明、标签、解释、注释和 zh 译文都必须使用简体中文。",
+		"读音标注：overview.pronunciation 与各 example 的读音按该语言通行方式标注（" + pronunciationSpec(lang.Target) + "）。",
 		moduleMap,
-		ironRules,
-	}, "\n")
+		ironRulesFor(lang),
+	}, "\n"))
 
 	ordinal := "一"
 	if input.Dimension == contracts.KeyTwo {
@@ -247,9 +339,9 @@ func BuildDimensionMessages(input DimensionPromptInput) []llm.Message {
 
 	parts := []string{
 		fmt.Sprintf("请生成目标词「%s」的第 %s 维内容。", input.Draft.Target, ordinal),
-		dimensionTask(input.Dimension, input.Draft.Language),
+		dimensionTask(input.Dimension, lang),
 		"",
-		"所有解释性文字使用简体中文；英文只出现在 en 字段、目标词、候选词和短语本身中。",
+		"所有解释性文字使用简体中文；目标语言只出现在 en 字段、目标词、候选词和短语本身中。",
 		"",
 		"已完成的维度摘要（必须保持一致；这些内容会原样保留，不要重新生成）：",
 		summary,
@@ -316,6 +408,7 @@ type HintQuestion struct {
 type HintPromptInput struct {
 	Target   string
 	Language string
+	Explain  string
 	Question HintQuestion
 }
 
@@ -323,10 +416,11 @@ type HintPromptInput struct {
 // hint request. The model only receives the scenario/challenge text, so it
 // cannot leak the reference answer.
 func BuildHintMessages(input HintPromptInput) []llm.Message {
-	system := strings.Join([]string{
+	lang := Languages{Target: strings.TrimSpace(input.Language), Explain: explainOrDefault(input.Explain)}
+	system := lang.speak(strings.Join([]string{
 		"你是英汉双语阅读辅助编辑，负责在中文写作情境中标注值得注意的词汇。",
 		"学习者的目标词：" + input.Target,
-		"目标英语变体：" + input.Language + "。en 字段使用该变体的自然英文；若未特别说明，按美式英语处理。",
+		"目标英语变体：" + lang.Target + "。en 字段是该词在目标语言里的自然对应；若未特别说明，按美式英语处理。",
 		"只输出 JSON。不要解释、不要道歉、不要使用 Markdown 代码围栏，也不要写免责声明。",
 		"标注规则：",
 		"1. 只标注题目 scenario 与 challenge 原文中真实出现的中文词语。term 必须是原文的精确子串，逐字一致，不要改字、不要加空格或标点。",
@@ -334,7 +428,7 @@ func BuildHintMessages(input HintPromptInput) []llm.Message {
 		"3. en 是该词在此情境下最自然的简洁英文对应，1–3 个词即可；确有必要时用斜杠给出两个近义选项（如 “procurement/purchase”），不要写解释句或整句翻译。",
 		"4. 不要标注正在练习的目标词本身，也不要给出目标词的译文；不要泄露参考答案或替学习者造句。",
 		"5. 同一个 term 只出现一次。不同 term 不要互相包含：例如已有“大额采购”时不要再单独标注“采购”，保留信息更完整的那个。",
-	}, "\n")
+	}, "\n"))
 
 	user := strings.Join([]string{
 		"请为下面这道写作情境题标注词汇提示。",
@@ -363,6 +457,7 @@ type GradeContext struct {
 type GradePromptInput struct {
 	Target   string
 	Language string
+	Explain  string
 	Question contracts.QuizQuestion
 	Answer   string
 	Context  GradeContext
@@ -371,12 +466,13 @@ type GradePromptInput struct {
 // BuildGradeMessages builds the system and user messages for one grading
 // request. The learner answer is framed as untrusted data.
 func BuildGradeMessages(input GradePromptInput) []llm.Message {
-	system := strings.Join([]string{
+	lang := Languages{Target: strings.TrimSpace(input.Language), Explain: explainOrDefault(input.Explain)}
+	system := lang.speak(strings.Join([]string{
 		"你是资深英汉双语写作教练，熟悉英语语域、搭配、意象和语篇场景，负责批改学习者主动使用目标词的输出。",
 		"目标词：" + input.Target,
-		"目标英语变体：" + input.Language + "。correction.en 以及任何英文示例都使用该变体的自然拼写与用法；若未特别说明，按美式英语处理。",
-		"反馈语言：简体中文。feedback、changes、followUp、correction.zh 全部使用简体中文；只有 correction.en、目标词和英文例句使用英文。",
-		ironRules,
+		"目标英语变体：" + lang.Target + "。correction.en 以及任何目标语言示例都使用该语言与该变体的自然写法；若未特别说明，按美式英语处理。",
+		"反馈语言：简体中文。feedback、changes、followUp、correction.zh 全部使用简体中文；只有 correction.en、目标词和目标语言例句使用目标语言。",
+		ironRulesFor(lang),
 		"评分口径：",
 		"- naturalness：0–10，句子是否像母语者会说的话，语法、搭配、语篇是否自然。",
 		"- register：0–10，用法与题目场景、目标词语域是否匹配。",
@@ -387,7 +483,7 @@ func BuildGradeMessages(input GradePromptInput) []llm.Message {
 		"- changes：1–4 条具体修改点，每条一句话，避免重复 feedback。",
 		"- followUp：一个下一步可执行的小练习，必须继续围绕目标词。",
 		"批改时若学习者提到词源或同源关系，必须区分事实与记忆法；不要为其背书，也不要伪造来源。",
-	}, "\n")
+	}, "\n"))
 
 	chunks := "未提供"
 	if len(input.Context.Chunks) > 0 {

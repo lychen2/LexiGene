@@ -50,10 +50,14 @@ export const dimensionThreeSchema = z.object({ register: registerSchema, chunks:
 export const dimensionsSchema = z.object({ one: dimensionOneSchema, two: dimensionTwoSchema, three: dimensionThreeSchema });
 export const analysisSchema = z.object({
   schemaVersion: z.literal(1), id: text, createdAt: z.string().datetime(), target: text, language: text,
+  /** Language the teaching copy was written in; older records have none. */
+  explain: z.string().optional(),
   dimensions: dimensionsSchema,
 });
 export const draftSchema = z.object({
   schemaVersion: z.literal(1), id: text, createdAt: z.string().datetime(), target: text, language: text,
+  /** Language the teaching copy is written in; older drafts have none. */
+  explain: z.string().optional(),
   dimensions: z.object({ one: dimensionOneSchema.optional(), two: dimensionTwoSchema.optional(), three: dimensionThreeSchema.optional() }),
 });
 export const apiConfigSchema = z.object({

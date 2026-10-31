@@ -36,11 +36,15 @@ The Linux executable is `build/linux-amd64/lexigene`. Its `.deb` and `.tar.gz` p
 
 ## Goal word lists
 
-`tools/build-wordlists.py` writes the goal lists into `public/wordlists/` from ECDICT, a 66 MB CSV fetched once into `artifacts/ecdict/`. Run it with `--download` on a machine that has no copy yet.
+`tools/build-wordlists.py` writes the goal lists into `public/wordlists/` from three sources: ECDICT (English exams, a 66 MB CSV fetched once into `artifacts/ecdict/`), OpenJLPT (JLPT N1/N2), and complete-hsk-vocabulary (HSK 5/6). Downloaded sources are cached under `artifacts/wordlists-src/`. Run it with `--download` on a machine that has no copy yet.
 
 The generator drops words tagged `cet4`, Oxford-3000 entries, Collins 4–5 words, everything within the 4,000 most frequent words, inflected forms (`0:` in ECDICT's `exchange` column), proper nouns and anything under three letters. Exam tagging then splits what is left into 考研 (`ky`), 雅思 (`ielts`), 托福 (`toefl`) and GRE (`gre`). `idioms.json` is hand-written and only indexed by the generator.
 
 `tools/prerender.mjs` copies `public/wordlists/` into `dist/`, because `vite.config.ts` sets `publicDir: false`. A list reaches the browser only when its tab is opened.
+
+## Interface locale
+
+`src/lib/i18n.ts` holds the interface strings keyed by their Chinese source text; `t()` returns the source when a key is missing, so a gap stays readable. `src/lib/prefs.ts` stores the studied language, variety, explanation language and interface locale in `localStorage` under `lexigene.prefs`, apart from API credentials.
 
 ## Motion
 

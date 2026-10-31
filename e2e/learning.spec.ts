@@ -169,7 +169,7 @@ test('real app routes: generation, local history, grade and restored attempt', a
   await page.getByLabel(/用 hold a grudge 或相关语块回应/).fill('I resent that he took credit for my work.');
   await page.getByRole('button', { name: '交给考官', exact: true }).click();
   await expect(page.locator('.grade-feedback')).toHaveText(grade.feedback);
-  await page.reload(); await page.getByRole('button', { name: '学习历史', exact: true }).click();
+  await page.reload(); await page.locator('.archive-trigger').click();
   await expect(page.locator('.history-item')).toHaveCount(1);
   await page.locator('.history-open').click(); await expect(page.getByRole('heading', { name: 'hold a grudge', exact: true })).toBeVisible();
   await expect(page.locator('.grade-feedback')).toHaveText(grade.feedback);
@@ -251,6 +251,71 @@ test('upstream streaming shows progress before completion and supports pause and
   } finally { pauseThirdStream = false; releaseThirdStream?.(); releaseThirdStream = undefined; }
 });
 
+test('choosing a target language and explanation language reaches the model and the typography', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1050 });
+  await page.goto('/');
+  await configure(page);
+  let sent: { target: string; language: string; explain?: string } | undefined;
+  await page.route('**/api/analyze', async route => {
+    sent = route.request().postDataJSON().draft;
+    await route.fulfill({ contentType: 'text/event-stream', body: 'data: {"type":"error","dimension":"one","message":"Local capture complete."}\n\n' });
+  });
+
+  await page.getByRole('button', { name: '模型设置' }).click();
+  const settings = page.getByRole('dialog');
+  await settings.getByLabel('目标语言').selectOption('ja');
+  await settings.getByLabel('变体').selectOption('ja-JP');
+  await settings.getByLabel('讲解语言').selectOption('en');
+  await page.keyboard.press('Escape');
+
+  await expect(page.locator('.search-bar .language-select select')).toHaveValue('ja:ja-JP');
+  await page.getByRole('textbox', { name: '目标单词或短语' }).fill('相変わらず');
+  await page.getByRole('button', { name: '开始解剖', exact: true }).click();
+  await expect.poll(() => sent?.language).toBe('日语（标准语（东京））');
+  expect(sent?.explain).toBe('英语');
+
+  // The sheet adopts the script of the language being studied.
+  await page.evaluate(() => {
+    const sheet = document.querySelector('.sheet-target') as HTMLElement;
+    sheet.dataset.script = 'kana';
+    sheet.setAttribute('lang', 'ja-JP');
+  });
+  const family = await page.locator('.word-hero h1').evaluate(node => getComputedStyle(node).fontFamily);
+  expect(family).toContain('Noto Serif CJK JP');
+  expect(await page.locator('.word-hero h1').evaluate(node => getComputedStyle(node).fontSize)).toBe('62px');
+  await page.getByRole('dialog').count();
+
+  // Arabic turns the sheet's own text right-to-left without flipping the layout.
+  await page.evaluate(() => {
+    const sheet = document.querySelector('.sheet-target') as HTMLElement;
+    sheet.dataset.script = 'arabic';
+    sheet.classList.add('is-rtl');
+  });
+  expect(await page.locator('.word-hero h1').evaluate(node => getComputedStyle(node).fontFamily)).toContain('Naskh');
+});
+
+test('the interface switches to English and the word desk follows the studied language', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1050 });
+  await page.goto('/');
+  await page.getByRole('button', { name: '模型设置' }).click();
+  await page.getByRole('dialog').getByLabel('界面语言').selectOption('en');
+  await page.waitForTimeout(200);
+  await page.keyboard.press('Escape');
+
+  await expect(page.getByRole('button', { name: /Word desk/ })).toBeVisible();
+  await expect(page.locator('.page-intro h2')).toHaveText('From root to usage, understand a word.');
+  await expect(page.getByRole('button', { name: 'Analyse', exact: true })).toBeVisible();
+
+  await page.getByRole('button', { name: /Word lists/ }).click();
+  const desk = page.getByRole('dialog');
+  await expect(desk.getByRole('tab', { name: /Japanese/ })).toBeVisible();
+  await desk.getByRole('tab', { name: /Japanese/ }).click();
+  await expect(desk.getByRole('tab', { name: /JLPT N1/ })).toHaveAttribute('aria-selected', 'true');
+  await desk.getByLabel('Search the list').fill('あいそ');
+  await expect(desk.getByText('愛想', { exact: true })).toBeVisible();
+  await expect(desk.getByText('あいそ', { exact: true })).toBeVisible();
+});
+
 test('the word desk filters goal lists and starts an analysis for the chosen word', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1050 });
   await page.goto('/');
@@ -284,7 +349,7 @@ test('the word desk lists expressions that reading rarely teaches', async ({ pag
   await expect(desk.getByText('阅读里学不到的俚语、习语和职场行话')).toBeVisible();
   await desk.getByLabel('搜索词单').fill('说漏');
   await expect(desk.getByText('spill the beans', { exact: true })).toBeVisible();
-  await expect(desk.getByText(/词单来自/)).toContainText('ECDICT');
+  await expect(desk.getByText(/词单来自/)).toContainText('MIT');
 });
 
 test('mobile rendering, imported history, card selection persistence and deletion', async ({ page }) => {
@@ -301,7 +366,7 @@ test('mobile rendering, imported history, card selection persistence and deletio
   const [json] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: '下载 JSON', exact: true }).click()]);
   expect(json.suggestedFilename()).toBe('anagnorisis.json');
   await json.saveAs('artifacts/anagnorisis.json');
-  await page.getByRole('button', { name: '学习历史', exact: true }).click();
+  await page.locator('.archive-trigger').click();
   await page.locator('input[type=file]').setInputFiles('artifacts/anagnorisis.json');
   await expect(page.getByText('解析已导入学习档案。')).toBeVisible();
   await page.getByRole('button', { name: '导出 Anki', exact: true }).click();
@@ -315,7 +380,7 @@ test('mobile rendering, imported history, card selection persistence and deletio
   const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: '下载 TSV', exact: true }).click()]); expect(download.suggestedFilename()).toBe('anagnorisis.tsv');
   await page.getByRole('button', { name: '关闭面板' }).click(); await page.getByRole('button', { name: '导出 Anki', exact: true }).click();
   await expect(page.locator('.export-card input:checked')).toHaveCount(2); await page.getByRole('button', { name: '关闭面板' }).click();
-  await page.getByRole('button', { name: '学习历史', exact: true }).click(); await page.getByRole('button', { name: '删除 anagnorisis', exact: true }).click(); await page.getByRole('button', { name: '删除', exact: true }).click(); await expect(page.locator('.history-item')).toHaveCount(0);
+  await page.locator('.archive-trigger').click(); await page.getByRole('button', { name: '删除 anagnorisis', exact: true }).click(); await page.getByRole('button', { name: '删除', exact: true }).click(); await expect(page.locator('.history-item')).toHaveCount(0);
 });
 
 test('four synonym meters retain scores and fit desktop and mobile', async ({ page }) => {
@@ -334,7 +399,7 @@ test('four synonym meters retain scores and fit desktop and mobile', async ({ pa
     })),
   };
   await page.setViewportSize({ width: 1440, height: 1050 }); await page.goto('/');
-  await page.getByRole('button', { name: '学习历史', exact: true }).click();
+  await page.locator('.archive-trigger').click();
   await page.locator('input[type=file]').setInputFiles({ name: 'synonyms.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(record)) });
   await expect(page.getByRole('heading', { name: 'circumvents', exact: true })).toBeVisible();
   const module = page.locator('#module-4'); await module.scrollIntoViewIfNeeded();
@@ -369,7 +434,7 @@ test('legacy quiz hints load, retry, persist and support hover, keyboard and tou
   question.reference = { en: 'The department circumvents the bidding threshold by splitting purchases into smaller orders.', zh: '该部门通过把采购拆成小额订单，绕过了招标门槛。' };
   delete question.hints;
   await page.setViewportSize({ width: 1440, height: 1050 }); await page.goto('/'); await configure(page);
-  await page.getByRole('button', { name: '学习历史', exact: true }).click();
+  await page.locator('.archive-trigger').click();
   await page.locator('input[type=file]').setInputFiles({ name: 'legacy-quiz.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(record)) });
   await expect(page.getByRole('heading', { name: 'circumvents', exact: true })).toBeVisible();
   expect(hintPrompts).toHaveLength(0);
@@ -414,7 +479,7 @@ test('legacy quiz hints load, retry, persist and support hover, keyboard and tou
     const exported = JSON.parse(await readFile('artifacts/quiz-hints.json', 'utf8'));
     expect(exported.dimensions.three.slices.quiz[0].hints).toEqual(vocabularyHints);
     expect(JSON.stringify(exported)).not.toContain('test-private-sentinel');
-    await page.reload(); await page.getByRole('button', { name: '学习历史', exact: true }).click();
+    await page.reload(); await page.locator('.archive-trigger').click();
     await page.locator('.history-open').filter({ hasText: 'circumvents' }).click();
     await page.locator('.sandbox').scrollIntoViewIfNeeded();
     await expect(purchase).toBeVisible(); expect(hintPrompts).toHaveLength(2);
@@ -422,7 +487,7 @@ test('legacy quiz hints load, retry, persist and support hover, keyboard and tou
     try {
       const mobile = await context.newPage(); mobile.on('pageerror', error => errors.push(error.message));
       await mobile.goto('/');
-      await mobile.getByRole('button', { name: '学习历史', exact: true }).click();
+      await mobile.locator('.archive-trigger').click();
       await mobile.locator('input[type=file]').setInputFiles({ name: 'quiz-with-hints.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(exported)) });
       await expect(mobile.getByRole('heading', { name: 'circumvents', exact: true })).toBeVisible();
       await mobile.locator('.sandbox').scrollIntoViewIfNeeded();

@@ -11,10 +11,10 @@
 export interface WordEntry {
   /** The word or expression. */
   w: string;
-  /** Pronunciation, empty for expressions. */
-  p: string;
-  /** Short Chinese gloss. */
-  z: string;
+  /** Reading: IPA, kana, or pinyin, depending on the list's language. */
+  p?: string;
+  /** Short gloss. Exam lists in Japanese and Chinese have none. */
+  z?: string;
   /** Rarity band: 0 少见, 1 较难, 2 罕见. */
   b: number;
   /** The band's label, written by the generator. */
@@ -24,15 +24,17 @@ export interface WordEntry {
 export interface WordGoal {
   slug: string;
   label: string;
+  /** Language of the list: `en`, `ja` or `zh`. */
+  lang: string;
   description: string;
   count: number;
   bytes: number;
+  source?: string;
+  license?: string;
 }
 
 export interface WordListIndex {
-  source: string;
-  sourceUrl: string;
-  license: string;
+  sources: { name: string; url: string; license: string }[];
   excluded: { label: string };
   goals: WordGoal[];
 }
@@ -40,9 +42,27 @@ export interface WordListIndex {
 export interface WordList {
   goal: string;
   label: string;
+  lang: string;
   description: string;
+  source?: string;
+  sourceUrl?: string;
+  license?: string;
   count: number;
   words: WordEntry[];
+}
+
+/** Language groups in the order the desk shows them. */
+export const languageGroups: { id: string; zh: string }[] = [
+  { id: 'en', zh: '英语' },
+  { id: 'ja', zh: '日语' },
+  { id: 'zh', zh: '中文' },
+];
+
+/** Group the index by list language, keeping the display order. */
+export function goalsByLanguage(goals: WordGoal[]): { id: string; zh: string; goals: WordGoal[] }[] {
+  return languageGroups
+    .map(group => ({ ...group, goals: goals.filter(goal => goal.lang === group.id) }))
+    .filter(group => group.goals.length > 0);
 }
 
 const lists = new Map<string, Promise<WordList>>();
@@ -94,7 +114,9 @@ export function matchesFilter(entry: WordEntry, filter: WordFilter, analyzed: (w
   if (filter.fresh && analyzed(entry.w)) return false;
   const query = filter.query.trim().toLowerCase();
   if (!query) return true;
-  return entry.w.toLowerCase().includes(query) || entry.z.toLowerCase().includes(query);
+  return entry.w.toLowerCase().includes(query)
+    || (entry.z ?? '').toLowerCase().includes(query)
+    || (entry.p ?? '').toLowerCase().includes(query);
 }
 
 /** Progress of one goal, counted from the analysed targets. */
