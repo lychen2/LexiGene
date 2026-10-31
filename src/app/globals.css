@@ -26,6 +26,55 @@ input, textarea, select { border-radius: var(--r-1); }
 input, textarea, select { color: var(--ink); }
 ::selection { background: #e9c7b3; }
 svg { flex-shrink: 0; vertical-align: middle; }
+/* ---------- text behaviour ----------
+   Wrapping, spacing, alignment and truncation only. Every rule is progressive
+   enhancement: a browser that does not know it ignores it. */
+
+/* 1. Headings break into even lines and never end on one lonely word. */
+h1, h2, h3, .drawer-header h2, .page-intro h2, .dimension-heading h2, .module-heading h3,
+.word-hero h2, .hero-definition strong, .sandbox-header h4 { text-wrap: balance; }
+
+/* 2. Paragraphs and list items avoid a lone last word. */
+p, li, dd, blockquote, .hero-definition, .body-copy, .story, .desk-description,
+.grade-feedback, .physical-image p, .speech p, .meaning-shift, .register-persona p { text-wrap: pretty; }
+
+/* 3. Figures that change in place keep their width. */
+:root { --figures: tabular-nums; }
+
+/* 4. Labels in flex rows stay on one line instead of squeezing. */
+.primary-button, .secondary-button, .export-button, .top-link, .icon-button,
+.desk-goal, .desk-filters button, .desk-next, .desk-more, .desk-band, .desk-done,
+.slice-tabs button, .dimension-nav button, .quiz-switch button, .card-type-toggles button,
+.study-footer .text-button, .history-meta .text-button, .range-ticks button,
+.interactive-badge, .hero-notes dt, .shortcut, .count-badge { white-space: nowrap; }
+
+/* 5. Text inside a flex or grid item truncates instead of spilling: the item
+   must be allowed to shrink first (min-width: 0). */
+.desk-row-word, .history-open, .sheet-toolbar > span, .api-sidebar > span,
+.model-field, .language-row > label { min-width: 0; }
+.desk-row-word strong, .history-open > strong, .sheet-toolbar > span {
+  display: block; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+}
+.history-open { flex: 1 1 auto; }
+
+/* 6–8. Chinese: justified to a whole number of characters, thin gaps beside
+   Latin, trimmed half-width space at a line start. Scoped by :lang so English
+   keeps its own rules — html carries lang and switches with the interface. */
+:lang(zh) { text-autospace: normal; text-spacing-trim: trim-start; }
+:lang(zh) .hero-definition, :lang(zh) .body-copy, :lang(zh) .physical-image p,
+:lang(zh) .meaning-shift, :lang(zh) .grade-feedback, :lang(zh) .subtext,
+:lang(zh) .whole-sentence p { text-align: justify; text-justify: inter-ideograph; }
+/* Whole characters per line: 30em at the paragraph's own size. Narrow columns,
+   captions and buttons are left alone because the gaps would go uneven. */
+:lang(zh) .hero-definition, :lang(zh) .body-copy, :lang(zh) .physical-image p { max-width: 30em; }
+
+/* 9. Chinese headings break between words: BudouX marks the boundaries with
+   <wbr> (src/components/cjk-text.tsx); keep-all forbids breaks elsewhere. */
+:lang(zh) .cjk-break { word-break: keep-all; overflow-wrap: anywhere; text-wrap: balance; }
+
+/* 10. 避头尾 is the browser's job; keep line-break at its default so the rules
+   stay on. overflow-wrap (not word-break) handles words wider than a line. */
+
 /* Figures are read in columns: module numbers, counts, scores, timers. */
 .module-number, .dimension-nav button span, .chapter-group button small, .count-badge,
 .shortcut, .desk-goal small, .desk-progress-head strong, .register-current strong,
@@ -623,7 +672,7 @@ input[type=checkbox] { accent-color: var(--green); width: 17px; height: 17px; fl
 .desk-row.done .desk-row-word strong { color: #7f8d75; }
 @keyframes desk-row-in { from { opacity: 0; transform: translateY(7px); } }
 .desk-row-word { display: flex; align-items: baseline; gap: 8px; min-width: 0; flex-wrap: wrap; }
-.desk-row-word strong { font: 500 17px/1.4 var(--serif); color: #3e583a; overflow-wrap: anywhere; }
+.desk-row-word strong { font: 500 17px/1.4 var(--serif); color: #3e583a; display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .desk-row-word small { font-size: 10px; color: #9caa90; }
 .desk-row-gloss { grid-column: 1; font-size: 12px; line-height: 1.7; color: #74856a; }
 .desk-row-meta { grid-column: 2; grid-row: 1 / span 2; display: flex; align-items: center; gap: 7px; }

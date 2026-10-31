@@ -145,7 +145,7 @@ function DeskRow({ entry, done, index, lang, reading, onPick }: { entry: WordEnt
   // every row; only bands that actually differ are worth showing.
   const chip = entry.b > 0;
   return <button className={`desk-row${done ? ' done' : ''}`} style={{ '--i': Math.min(index, 12) } as CSSProperties} onClick={() => onPick(entry.w)} lang={lang}>
-    <span className="desk-row-word">
+    <span className="desk-row-word" title={entry.w}>
       <strong>{entry.w}</strong>
       {reading && entry.p && <small className="desk-reading">{entry.p}</small>}
     </span>

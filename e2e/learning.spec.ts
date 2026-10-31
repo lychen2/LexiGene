@@ -131,6 +131,9 @@ test('desktop visual modules, temperature, graph, dialogue and export', async ({
   await expect(page.getByRole('heading', { name: defaultDemo.target, exact: true })).toBeVisible();
   await expect(page.locator('section[id^="module-"]')).toHaveCount(8);
   await page.evaluate(() => document.fonts.ready);
+  // The hero grew with the reading aids, so the first module now sits just
+  // below the fold and reveals once it is scrolled to.
+  await page.locator('#module-1').scrollIntoViewIfNeeded();
   await expect(page.locator('#module-1')).toHaveCSS('opacity', '1');
   await page.screenshot({ path: 'artifacts/desktop.png', fullPage: false });
   await page.locator('#module-2').getByRole('button', { name: /prognosis/ }).click();

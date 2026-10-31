@@ -4,6 +4,7 @@ import './register-meter.css';
 import { WordHelix } from './word-helix';
 import { Fragment, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { t } from '@/lib/i18n';
+import { CjkText } from './cjk-text';
 import { tagOf } from '@/lib/languages';
 import { ArrowDown, ArrowRight, Check, ChevronDown, Copy, CornerDownRight, Feather, Flame, GitBranch, Layers3, MessageCircle, Microscope, MoveUpRight, Sparkles, Thermometer, Users, X } from 'lucide-react';
 import type { AnalysisDocument, AnalysisDraft, Example, GenerationProgress } from '@/lib/schema';
@@ -27,7 +28,7 @@ const moduleHints = [
 
 export function Section({ number, title, children, className = '', action }: { number: number; title: string; children: ReactNode; className?: string; action?: ReactNode }) {
   return <section id={`module-${number}`} className={`module ${className}`} data-reveal="" style={{ '--reveal-delay': `${(number % 3) * 60}ms` } as React.CSSProperties}>
-    <header className="module-heading"><div className="module-number">{String(number).padStart(2, '0')}</div><div><h3>{t(title)}</h3>{moduleHints[number - 1] && <p>{t(moduleHints[number - 1])}</p>}</div>{action && <div className="module-action">{action}</div>}</header>
+    <header className="module-heading"><div className="module-number">{String(number).padStart(2, '0')}</div><div><h3 className="cjk-break"><CjkText>{t(title)}</CjkText></h3>{moduleHints[number - 1] && <p>{t(moduleHints[number - 1])}</p>}</div>{action && <div className="module-action">{action}</div>}</header>
     {children}
   </section>;
 }
@@ -43,7 +44,7 @@ function navigateTabs(event: KeyboardEvent<HTMLDivElement>, select: (index: numb
 
 export function ExampleLine({ value }: { value: Example }) { return <div className="example"><p lang="en">{value.en}</p><span>{value.zh}</span></div>; }
 export function DimensionHeading({ index }: { index: number }) {
-  return <div className={`dimension-heading dimension-${index}`}><h2>{t(dimensionNames[index])}</h2><span className="dimension-rule" /></div>;
+  return <div className={`dimension-heading dimension-${index}`}><h2 className="cjk-break"><CjkText>{t(dimensionNames[index])}</CjkText></h2><span className="dimension-rule" /></div>;
 }
 export function Origin({ data }: { data: AnalysisDocument['dimensions']['one']['origin'] }) {
   const [selected, setSelected] = useState(0);
@@ -148,7 +149,7 @@ export function WordHero({ doc, isDemo }: { doc: AnalysisDraft; isDemo: boolean 
           {one.overview.pitch && <div><dt>{t('音调')}</dt><dd>{one.overview.pitch}</dd></div>}
           {one.overview.grammar && <div><dt>{t('语法')}</dt><dd>{one.overview.grammar}</dd></div>}
         </dl>}
-        <h2>{one.overview.core}</h2>
+        <h2 className="cjk-break"><CjkText>{one.overview.core}</CjkText></h2>
         <p className="hero-definition">{one.overview.definition}</p>
       </>}
     </div>
