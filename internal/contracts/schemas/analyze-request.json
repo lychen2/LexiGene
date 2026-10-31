@@ -75,6 +75,35 @@
                     "partOfSpeech": {
                       "type": "string",
                       "minLength": 1
+                    },
+                    "ruby": {
+                      "maxItems": 12,
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "base": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "ruby": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        },
+                        "required": [
+                          "base",
+                          "ruby"
+                        ]
+                      }
+                    },
+                    "pitch": {
+                      "type": "string",
+                      "maxLength": 160
+                    },
+                    "grammar": {
+                      "type": "string",
+                      "maxLength": 200
                     }
                   },
                   "required": [

@@ -2,11 +2,13 @@ import { test, expect, type Page } from '@playwright/test';
 import { createServer, type Server } from 'node:http';
 import { mkdir, readFile } from 'node:fs/promises';
 import { demo } from '../tests/fixtures/resent';
+import { japanese } from '../tests/fixtures/japanese';
 import { demo as defaultDemo } from '../src/lib/demo';
 import type { AnalysisDocument } from '../src/lib/schema';
 
 let server: Server; let baseUrl: string;
 let failTwo = false;
+let useJapanese = false;
 let hangThree = false;
 let pauseThirdStream = false;
 let releaseThirdStream: (() => void) | undefined;
@@ -31,10 +33,11 @@ test.beforeAll(async () => {
     let raw = ''; for await (const chunk of request) raw += chunk;
     const body = JSON.parse(raw); const content = body.messages.map((message: { content: string }) => message.content).join('\n');
     let data: unknown = 'OK';
-    if (content.includes('"origin"')) { data = demo.dimensions.one; calls.push('one'); }
-    else if (content.includes('"concept"')) { if (failTwo) { response.writeHead(429); response.end('{}'); return; } data = demo.dimensions.two; calls.push('two'); }
+    const fixture = useJapanese ? japanese : demo;
+    if (content.includes('"origin"')) { data = fixture.dimensions.one; calls.push('one'); }
+    else if (content.includes('"concept"')) { if (failTwo) { response.writeHead(429); response.end('{}'); return; } data = fixture.dimensions.two; calls.push('two'); }
     else if (content.includes('"scores"')) { data = grade; calls.push('grade'); }
-    else if (content.includes('"register"')) { calls.push('three'); if (hangThree) return; data = demo.dimensions.three; }
+    else if (content.includes('"register"')) { calls.push('three'); if (hangThree) return; data = fixture.dimensions.three; }
     else if (content.includes('"hints"')) {
       hintPrompts.push(content);
       if (failHints) { response.writeHead(429); response.end('{}'); return; }
@@ -314,6 +317,44 @@ test('the interface switches to English and the word desk follows the studied la
   await desk.getByLabel('Search the list').fill('あいそ');
   await expect(desk.getByText('愛想', { exact: true })).toBeVisible();
   await expect(desk.getByText('あいそ', { exact: true })).toBeVisible();
+});
+
+test('a Japanese analysis shows furigana, pitch and grammar in a Japanese frame', async ({ page }) => {
+  useJapanese = true;
+  await page.setViewportSize({ width: 1440, height: 1050 });
+  await page.goto('/');
+  await page.getByRole('button', { name: '模型设置' }).click();
+  const settings = page.getByRole('dialog');
+  await settings.getByLabel('目标语言').selectOption('ja');
+  await page.keyboard.press('Escape');
+  await page.goto('/');
+  await configure(page);
+
+  await page.getByRole('textbox', { name: '目标单词或短语' }).fill('日本');
+  await page.getByRole('button', { name: '开始解剖', exact: true }).click();
+  await expect(page.getByText('八个模块已就绪，开始探索吧。')).toBeVisible({ timeout: 15000 });
+
+  // Furigana sits above each kanji.
+  const heading = page.locator('.word-hero h1');
+  await expect(heading.locator('ruby')).toHaveCount(1);
+  await expect(heading.locator('rt')).toHaveText(['に', 'ほん']);
+  expect(await heading.locator('ruby').innerHTML()).toContain('日<rt>に</rt>本<rt>ほん</rt>');
+  await expect(heading).toHaveAttribute('lang', 'ja-JP');
+
+  // Pitch accent and grammar are stated as Japanese writes them.
+  await expect(page.locator('.hero-notes')).toContainText('0 型（平板）');
+  await expect(page.locator('.hero-notes')).toContainText('无性数格变化');
+  await expect(page.locator('.hero-notes')).toContainText('音调');
+  await expect(page.locator('.hero-notes')).toContainText('语法');
+
+  // The sheet adopts the Japanese script and the helix weaves Japanese terms.
+  await expect(page.locator('.sheet-target')).toHaveAttribute('data-script', 'kana');
+  const woven = await page.locator('.word-helix text').allTextContents();
+  expect(woven.some(word => /[\u3040-\u30ff\u4e00-\u9fff]/.test(word))).toBe(true);
+  expect(woven.filter(word => /^[a-z]+$/.test(word)).length).toBe(0);
+
+  await page.screenshot({ path: 'artifacts/japanese-hero.png' });
+  useJapanese = false;
 });
 
 test('the word desk filters goal lists and starts an analysis for the chosen word', async ({ page }) => {

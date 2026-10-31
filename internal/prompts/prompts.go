@@ -60,30 +60,203 @@ func (l Languages) speak(text string) string {
 
 // pronunciationSpec states how the studied language writes its reading, so an
 // analysis of Japanese is not asked for IPA.
-func pronunciationSpec(target string) string {
-	switch {
-	case strings.Contains(target, "日语"):
-		return "用假名写读音，并在括号内给出赫本式罗马字；音调只在有必要时用数字标出"
-	case strings.Contains(target, "中文"):
-		return "用带声调符号的拼音，并在括号内给出注音符号"
-	case strings.Contains(target, "韩语"):
-		return "用韩文写读音，并给出罗马字（文观部式）"
-	case strings.Contains(target, "阿拉伯语"):
-		return "用阿拉伯文写读音，并用拉丁转写标注，不使用 IPA"
-	case strings.Contains(target, "希伯来语"):
-		return "用希伯来文写读音，并用拉丁转写标注，不使用 IPA"
-	case strings.Contains(target, "印地语"), strings.Contains(target, "孟加拉语"), strings.Contains(target, "泰米尔语"), strings.Contains(target, "泰卢固语"), strings.Contains(target, "卡纳达语"), strings.Contains(target, "马拉雅拉姆语"):
-		return "用天城文等原有文字写读音，并给出拉丁转写"
-	case strings.Contains(target, "泰语"):
-		return "用泰文写读音，并给出拉丁转写"
-	case strings.Contains(target, "俄语"), strings.Contains(target, "乌克兰语"):
-		return "用西里尔字母写读音并标出重音，必要时附国际音标"
-	case strings.Contains(target, "希腊语"):
-		return "用希腊字母写读音并标出重音，必要时附国际音标"
-	case strings.Contains(target, "英语"), strings.Contains(target, "西班牙语"), strings.Contains(target, "法语"), strings.Contains(target, "德语"), strings.Contains(target, "葡萄牙语"), strings.Contains(target, "意大利语"), strings.Contains(target, "荷兰语"), strings.Contains(target, "瑞典语"), strings.Contains(target, "挪威语"), strings.Contains(target, "丹麦语"), strings.Contains(target, "芬兰语"), strings.Contains(target, "波兰语"), strings.Contains(target, "捷克语"), strings.Contains(target, "罗马尼亚语"), strings.Contains(target, "土耳其语"), strings.Contains(target, "印尼语"), strings.Contains(target, "马来语"), strings.Contains(target, "菲律宾语"), strings.Contains(target, "越南语"), strings.Contains(target, "斯瓦希里语"), strings.Contains(target, "南非荷兰语"), strings.Contains(target, "匈牙利语"):
-		return "用国际音标标注，并标出主重音"
+// furiganaRule asks for ruby only where the script needs it.
+func furiganaRule(traits languageTraits) string {
+	if !traits.furigana {
+		return "- overview.ruby：该语言的文字不需要注音，省略此字段。"
 	}
-	return "用该语言通行的注音方式标注读音"
+	return "- overview.ruby：把目标词按汉字与假名切开，逐段给出 {base（原文字形）, ruby（平假名读音）}，顺序与原文一致；假名片段也照写，不要合并或改写字形。无法确定读音的片段不要猜，宁可少给。"
+}
+
+// pitchRule asks for tone or pitch-accent notation where it carries meaning.
+func pitchRule(traits languageTraits) string {
+	if traits.pitch == "" {
+		return "- overview.pitch：该语言不用声调或音高重音区分词义，省略此字段。"
+	}
+	return "- overview.pitch：" + traits.pitch + "。"
+}
+
+// languageTraits describes what a language's own description needs and what an
+// English-shaped analysis would get wrong. Every field becomes prompt text, so
+// an analysis of Japanese is not asked for IPA, and an analysis of French is
+// asked for the gender it cannot avoid.
+type languageTraits struct {
+	// reading is how the language writes its pronunciation.
+	reading string
+	// phonology names contrasts an English speaker does not expect.
+	phonology string
+	// furigana asks for overview.ruby.
+	furigana bool
+	// pitch asks for overview.pitch and explains the notation.
+	pitch string
+	// structure explains how words are built, replacing root/suffix talk.
+	structure string
+	// grammar covers inflection an English frame would omit.
+	grammar string
+	// register names the ladder this language actually uses.
+	register string
+}
+
+func traitsFor(target string) languageTraits {
+	has := func(names ...string) bool {
+		for _, name := range names {
+			if strings.Contains(target, name) {
+				return true
+			}
+		}
+		return false
+	}
+	switch {
+	case has("日语"):
+		return languageTraits{
+			reading:   "一律给出平假名读音，汉字词同时给出罗马字（赫本式），绝不使用国际音标",
+			phonology: "日语按モーラ计时，长音、促音「っ」、拗音和拨音「ん」各占一拍：说明读音时用假名如实写出，不要按英语音节切分",
+			furigana:  true,
+			pitch:     "东京式音调（アクセント）：用数字型标注（0 型平板、1 型头高、2 型中高…），并说明起始高低与下降位置；音调标记以モーラ为单位，不要写成重音符号",
+			structure: "日语的词不是「词根 + 词缀」：分清語種（和語・漢語・外来語・混種語），汉字词说明音読み/訓読み、当て字与音便，必要时给出同源的汉语词，但不要编造日语音韵史",
+			grammar:   "标出词性与活用类型（如 五段動詞・一段動詞・形容詞），说明敬体/常体与助词搭配；日语的「词性」不是英语式词性，不要套用可数/不可数",
+			register:  "按日语的语域阶梯（常体 → 丁寧体 → 尊敬語・謙譲語）分层，而不是英语式的 formal/informal 两档",
+		}
+	case has("中文"):
+		return languageTraits{
+			reading:   "用带声调符号的拼音，声调写在该音节的主元音上；不使用国际音标",
+			phonology: "说明声调与变调（如三声连读）、送气与不送气（b/p 是送气对立而非清浊对立），需要时说明轻声与儿化",
+			pitch:     "拼音声调本身就是音高信息：在 pitch 里用「阴平 55 / 阳平 35 / 上声 214 / 去声 51」这样的调值标注，需要时说明连读变调",
+			structure: "汉语的词不是屈折词：用造字法与构词说明来源，形声字说明形旁与声旁，复合词说明语素组合；词源说明区分本义、引申义与假借",
+			grammar:   "说明词性与搭配限制（如量词、离合词的插入方式），不要给汉语硬套英语式的可数/不可数与主谓一致",
+			register:  "按书面语/口语、正式/随意的实际用法分层，说明文言残留与地区差异",
+		}
+	case has("韩语"):
+		return languageTraits{
+			reading:   "用韩文写读音，必要时给罗马字（文观部式）；不使用国际音标",
+			phonology: "说明紧音/送气音/平音三组对立（ㄱㄲㅋ）与连音、鼻音化等音变，不要按英语的清浊二分",
+			structure: "分清固有語・漢字語・外来語，汉字词给出汉字；助词与词尾是语法成分，不要当成英语式词缀",
+			grammar:   "说明词性、活用与敬语阶（해요体 / 합니다体 / 반말），助词搭配必须正确",
+			register:  "按韩语敬语阶分层，而不是英语式 formal/informal",
+		}
+	case has("阿拉伯语"):
+		return languageTraits{
+			reading:   "用阿拉伯文写读音，附拉丁转写（说明所用体系）；不使用国际音标，并说明短元音通常不写出",
+			phonology: "说明咽喉音、重音辅音（ص ض ط ظ）、长短元音与重迭（shadda）的对立，这些是英语没有的区别",
+			structure: "阿拉伯语以三母词根（جذر ثلاثي）和派生式（وزن，如 فَعَلَ / فَعَّلَ / مُفَعِّل）构词：说明目标词的词根字母与词式，而不是英语式的前后缀",
+			grammar:   "说明性（阳性/阴性）、数（单/双/复）、格与冠词变化，以及名词形容词的性数一致",
+			register:  "区分现代标准阿拉伯语与方言用法，按实际场合分层",
+		}
+	case has("希伯来语"):
+		return languageTraits{
+			reading:   "用希伯来文写读音，附拉丁转写，并说明何时标出元音符号（ניקוד）；不使用国际音标",
+			phonology: "说明喉音与元音体系，以及现代口语的简化",
+			structure: "希伯来语以三字母词根（שורש）和词式（בניין）构词：说明词根字母与所屬词式，而不是英语式词缀",
+			grammar:   "说明性（阳性/阴性）、数与冠词、名词形容词一致",
+			register:  "区分书面与口语、正式与随意用法",
+		}
+	case has("法语"):
+		return languageTraits{
+			reading:   "用国际音标标注，并标出主重音；法语重音落在节奏组末音节，须说明这一点",
+			phonology: "说明鼻化元音、联诵（liaison）与省音（élision），这些会改变实际读音",
+			structure: "说明拉丁词根与前后缀，同源词可跨罗曼语族列举，但要注明是同一词源的亲属而非同形",
+			grammar:   "必须说明名词的阴阳性与单复数、冠词形式、形容词的性数配合，以及动词变位所属组别",
+			register:  "按 tu/vous 的区别与书面/口语分层",
+		}
+	case has("西班牙语", "意大利语", "葡萄牙语", "罗马尼亚语"):
+		return languageTraits{
+			reading:   "用国际音标标注并标出重音；说明拼写与读音的对应规则",
+			phonology: "说明清浊塞音、鼻化元音（葡语）、以及各地区 seseo/ceceo 之类的实际差异",
+			structure: "说明拉丁词根与前后缀，同源词可跨罗曼语族列举，并注明同源而非同形",
+			grammar:   "必须说明名词的阴阳性与单复数、冠词形式、形容词性数配合，以及动词变位与常用时态",
+			register:  "按 tú/usted（西）、tu/Lei（意）、você/o senhor（葡）之类的人称阶梯分层",
+		}
+	case has("德语"):
+		return languageTraits{
+			reading:   "用国际音标标注并标出主重音；说明长短元音与变音（Umlaut）的实际读音",
+			phonology: "说明长短元音对立、词尾清化（Auslautverhärtung）与送气清塞音，这些英语没有完全对应",
+			structure: "说明日耳曼词根、可分前缀（trennbare Präfixe）与复合词（Kompositum）的构成方式，以及连接成分（Fugen-s）",
+			grammar:   "必须说明名词的三个性（阳性/阴性/中性）、四格变化、冠词与形容词词尾变化",
+			register:  "按 du/Sie 的区别与书面/口语分层",
+		}
+	case has("俄语", "乌克兰语"):
+		return languageTraits{
+			reading:   "用西里尔字母写读音并标出重音位置（重音在俄语中不可预测）；可附国际音标",
+			phonology: "说明元音弱化（аканье）、辅音软化（软音符号）与清浊同化，这些改变实际读音",
+			structure: "说明斯拉夫词根与前后缀、词根交替，同源词在斯拉夫语族内列举并注明同源",
+			grammar:   "必须说明性（阳性/阴性/中性）、数、六个格与动词体（完成体/未完成体）",
+			register:  "按 ты/вы 的区别与书面/口语分层",
+		}
+	case has("土耳其语"):
+		return languageTraits{
+			reading:   "用国际音标标注并标出重音；说明土耳其语字母与读音的一一对应",
+			phonology: "说明元音和谐（ünlü uyumu）与软音 ğ、无点 ı 的实际读音",
+			structure: "土耳其语是黏着语：说明词根加后缀的次序与元音和谐对后缀形式的影响，不要按英语屈折方式描述",
+			grammar:   "说明后缀链（格、数、领属）与动词时体，名词无语法性",
+			register:  "按 sen/siz 的区别与书面/口语分层",
+		}
+	case has("印地语", "孟加拉语", "泰米尔语", "泰卢固语", "卡纳达语", "马拉雅拉姆语"):
+		return languageTraits{
+			reading:   "用原有文字写读音并附 IAST 转写；不使用国际音标",
+			phonology: "说明送气/不送气、卷舌/齿音、以及元音长短的对立，这些是英语没有的区别",
+			structure: "说明梵语词根或达罗毗荼词根、名词性与构词方式；借词分波斯-阿拉伯借词与英语借词并注明来源",
+			grammar:   "说明性（部分语言有阴阳两性）、数与格的后缀，以及动词的人称词尾",
+			register:  "按 आप/तुम/तू 之类的人称阶梯与书面/口语分层",
+		}
+	case has("泰语"):
+		return languageTraits{
+			reading:   "用泰文写读音并附拉丁转写；不使用国际音标",
+			phonology: "说明五个声调、声调符号与声母类别的关系，以及长短元音对立",
+			pitch:     "声调是词义的一部分：用「中平 33 / 低平 11 / 降调 41 / 高平 44 / 升调 24」这样的调值标注目标词的调型",
+			structure: "说明泰语词的来源（巴利语/梵语借词、高棉语借词、英语借词）与复合方式；没有英语式词根词缀",
+			grammar:   "说明量词、语序与语气词；泰语没有屈折变化，不要套用英语的时态变位",
+			register:  "按 ครับ/ค่ะ 与皇室语、僧侣用语等实际语域分层",
+		}
+	case has("越南语"):
+		return languageTraits{
+			reading:   "用越南语国语字写读音，并在音节后标出六声调之一；不使用国际音标",
+			phonology: "说明六声调（含 ngã、nặng）与南北发音差异（如 d/gi、tr/ch）",
+			pitch:     "声调标注：平声（ngang）、玄声（huyền）、问声（hỏi）、跌声（ngã）、锐声（sắc）、重声（nặng），说明目标词的调类与调值",
+			structure: "分清汉越词（từ Hán Việt）与固有词，汉越词给出对应汉字；这不是英语式词根",
+			grammar:   "说明量词、语序与称谓语；越南语无屈折变化",
+			register:  "按称谓语（anh/em/ông/bà）与实际场合分层",
+		}
+	case has("瑞典语", "挪威语"):
+		return languageTraits{
+			reading:   "用国际音标标注，并标出重音；说明声调重音（acute/grave）的存在",
+			phonology: "说明长短元音与辅音的对立，以及两种声调重音在词义上的区别",
+			pitch:     "声调重音（accent 1 / accent 2）：说明目标词属于哪一种，并说明它在口语中的听感差别",
+			structure: "说明日耳曼词根与复合词构成、以及常见的派生后缀",
+			grammar:   "说明名词的性（通性/中性）、定冠词的后缀形式与形容词配合",
+			register:  "按 du/ni 的区别与书面/口语分层",
+		}
+	case has("英语"):
+		return languageTraits{
+			reading:   "用国际音标标注，并标出主重音",
+			phonology: "说明拼写与读音不一致之处，以及该变体的元音差异",
+			structure: "说明词源层次（本土日耳曼词、拉丁借词、希腊词根、法语借词）与构词成分，同源词只在有依据时列出",
+			grammar:   "说明可数性、及物性与常见搭配限制",
+			register:  "按英语的正式度阶梯分层，说明口语与书面语的差别",
+		}
+	case has("印尼语", "马来语", "菲律宾语"):
+		return languageTraits{
+			reading:   "用国际音标标注，并标出重音",
+			phonology: "说明清浊对立与重音规则，注意这些语言的拼写基本反映读音",
+			structure: "说明南岛语词根与前后缀、重叠（reduplication）构词，以及梵语/阿拉伯语/英语借词层次",
+			grammar:   "说明词缀如何改变词性与及物性、语序与焦点系统（菲律宾语）",
+			register:  "按正式/口语与社会语域分层",
+		}
+	case has("希腊语"):
+		return languageTraits{
+			reading:   "用希腊字母写读音并标出重音，必要时附国际音标",
+			phonology: "说明现代希腊语的软腭化与重音规则，避免用古希腊语读音",
+			structure: "说明希腊词根与前后缀、复合词构成，并指出与英语学术词的对应关系",
+			grammar:   "说明性（阳性/阴性/中性）、格与冠词、动词变位",
+			register:  "按正式/口语与 καθαρεύουσα 残留分层",
+		}
+	}
+	return languageTraits{
+		reading:   "用国际音标注音，并标出主重音",
+		phonology: "说明该语言里英语没有的音位对立与重音规则",
+		structure: "说明该语言的构词方式（词根、词缀、复合或重叠），不要默认它是英语式的屈折词",
+		grammar:   "说明性、数、格、冠词或敬语等该语言实际存在的语法范畴",
+		register:  "按该语言自己的语域阶梯分层",
+	}
 }
 
 const moduleMap = "产品共八个分析模块：源流 origin、血脉 bloodline、概念 concept、辨析 nuance、语域 register、语块 chunks、易错 pitfalls、实战 slices；overview 是核心档案。"
@@ -247,10 +420,17 @@ func dimensionTask(dimension contracts.DimensionKey, lang Languages) string {
 }
 
 func dimensionTaskText(dimension contracts.DimensionKey, lang Languages) string {
+	traits := traitsFor(lang.Target)
 	if dimension == contracts.KeyOne {
 		return strings.Join([]string{
 			"本次只填写 overview、origin、bloodline。",
-			fmt.Sprintf("- overview.pronunciation：%s；若该变体读音有明显差异，用简短中文注明。overview.core：一句话中文核心义；overview.definition：用简体中文写精炼解释，说明核心含义与使用范围；有多个义项时，交代当代日常义、粗俗或贬义用法与专门义的区别，再选定本次重点。词典排列顺序和词源前身的释义不能代替使用场合判断。不要写英文词典式释义；overview.partOfSpeech：用 n. / v. / adj. 等标准词性缩写。", pronunciationSpec(lang.Target)),
+			fmt.Sprintf("- overview.pronunciation：%s；若该变体读音有明显差异，用简短说明注明。overview.core：一句话核心义；overview.definition：写精炼解释，说明核心含义与使用范围；有多个义项时，交代当代日常义、粗俗或贬义用法与专门义的区别，再选定本次重点。词典排列顺序和词源前身的释义不能代替使用场合判断。不要写词典式释义；overview.partOfSpeech：用该语言词典通行的词性缩写（如英语 n./v./adj.，日语 名詞/動詞/形容詞，法语 n.m./n.f./v.）。", traits.reading),
+			"读音细节：" + traits.phonology + "。",
+			furiganaRule(traits),
+			pitchRule(traits),
+			"- overview.grammar：用一句话交代学习者无法自行推断的语法事实：" + traits.grammar + "。该语言没有这些范畴时省略此字段。",
+			"- origin.story：说明目标词有依据的来源与构词。构词方式：" + traits.structure + "。保留资料中的不确定性；一个词是另一词的变体，不能单凭拼写将它拆成后者的词根。资料未说明的命名原因须留作未知，形象化联想放入 physicalImage。",
+			"- bloodline.family / bloodline.root / bloodline.route / bloodline.cognates：用该语言真实的构词单位表达，不要套用英语的「词根 + 后缀」模板。" + traits.structure + "。cognates 只写有把握的真实词，没有就返回 []。",
 			"- origin.story：用简体中文说明目标词有依据的词源关系，分清目标词、词源前身及构词成分。保留来源中的不确定性；一个词是另一词的变体，不能单凭拼写将它拆成后者的词根。资料未说明的命名原因须留作未知，形象化联想放入 physicalImage。",
 			"- origin.physicalImage：用简体中文给出一个具体、可视化、能帮助记忆的意象。",
 			"- origin.evolution：2–4 个有依据的演变阶段，按时间或已知词源关系排序；资料只有“来源关系 → 当代用法”时就写两个阶段，不补造中间历史。每项含唯一 id、label、period、meaning、connection、example{en,zh}；label、period、meaning、connection 一律用简体中文。历史阶段可说明前身词，但须标明该阶段词形；末阶段回到目标词。不同现代义项本身不证明先后演变关系。",
@@ -274,10 +454,11 @@ func dimensionTaskText(dimension contracts.DimensionKey, lang Languages) string 
 
 	return strings.Join([]string{
 		"本次只填写 register、chunks、pitfalls、slices。",
-		"- register.score：目标词本身的语域分 1–10（1 = 极口语/粗俗，10 = 极正式/学术）；register.persona：典型使用者；register.prosody：positive / neutral / negative / mixed 之一；register.prosodyExplanation：情感色彩解释；register.subtext：常见言外之意。以上解释性字段全部用简体中文。",
+		"- 语域阶梯按该语言自己的体系分层：" + traits.register + "。10 个层级是该阶梯的刻度，不是英语的 formal/informal 两档。",
+		"- register.score：目标词本身的语域分 1–10（1 = 最随意/粗俗，10 = 最正式/仪式化）；register.persona：典型使用者；register.prosody：positive / neutral / negative / mixed 之一；register.prosodyExplanation：情感色彩解释；register.subtext：常见言外之意。以上解释性字段全部用简体中文。",
 		"- register.levels：恰好 10 个层级，level 1 到 10 各出现一次。每级含 label（简体中文），以及 0–3 个 candidates；每个 candidate 含 word、nuance、persona、prosody、shift、example{en,zh}。某档如果确实没有自然、常用、语域匹配的表达，candidates 返回空数组即可；禁止为凑数硬塞、硬造或重复同一词。",
 		"- chunks.items：4–5 个高频搭配/语块，含 phrase、meaning（简体中文）、example{en,zh}；chunks.culture：0–4 个文化表达或习语，含 expression、explanation（简体中文）、example。只有确实存在相关、常用的文化表达时才填写；没有合适内容就返回 []。搭配必须是母语者常用组合，不要生造。",
-		"- pitfalls.items：2–3 个中国学习者真实易错点，含 wrong、right、explanation（简体中文）、image（简体中文）、translation（简体中文对比说明）。错误要具体到用法、搭配或语义边界。",
+		"- pitfalls.items：2–3 个以解释语言为母语的学习者在学目标语言时的真实易错点，含 wrong、right、explanation（简体中文）、image（简体中文）、translation（简体中文对比说明）。错误要具体到用法、搭配或语义边界。",
 		"- slices.dialogues：恰好 3 段对话，setting 分别为 friends、work、culture；每段 2–6 行，含 speaker、en、zh、annotation（用简体中文点出目标词在本段中的用法）。对话要自然，不要写成教科书问答。",
 		"- slices.quiz：恰好 2 道输出型练习，id 唯一；每项含 scenario、challenge、focus（均用简体中文）、reference{en,zh}、hints。题目要逼学习者主动使用目标词，不要选择题或填空题。",
 		"- slices.quiz[].hints：为每道题标注 4–8 个情境相关的中文词语，数组元素为 {term, en}。term 必须逐字出现在该题 scenario 或 challenge 原文中（精确子串，不改字、不加空格或标点）；en 是该词在此情境下最自然的简洁英文对应，1–3 个词，可用 “procurement/purchase” 这样的斜杠形式，不要写解释句。优先标注情境、程序、机构、情绪或论证相关的实词，跳过“的、了、是、在”等虚词。不要标注正在练习的目标词本身，也不要给出它的译文；不要翻译整句，不泄露参考答案。同一个 term 只出现一次，不同 term 不要互相包含（如不要同时标注“采购”与“大额采购”，保留信息更完整的那个）。",
@@ -315,6 +496,7 @@ type DimensionPromptInput struct {
 // and only when a lookup returned usable text.
 func BuildDimensionMessages(input DimensionPromptInput) []llm.Message {
 	lang := LanguagesFor(input.Draft)
+	traits := traitsFor(lang.Target)
 	summary := summarizeDimensions(input.Completed)
 	if summary == "" {
 		summary = "（暂无已完成维度）"
@@ -325,7 +507,8 @@ func BuildDimensionMessages(input DimensionPromptInput) []llm.Message {
 		"目标词：" + input.Draft.Target,
 		"目标英语变体：" + lang.Target + "。所有 en 字段（例句、短语、对话、参考句）都使用该语言与该变体的自然写法，不要混入其他变体的拼写或词汇；若未特别说明，按美式英语处理。",
 		"解释语言：简体中文。除 en 字段、目标词、候选词和短语本身外，所有说明、标签、解释、注释和 zh 译文都必须使用简体中文。",
-		"读音标注：overview.pronunciation 与各 example 的读音按该语言通行方式标注（" + pronunciationSpec(lang.Target) + "）。",
+		"读音标注：" + traits.reading + "。不要给不使用国际音标的语言硬套音标，也不要用英语的拼读规则解释别的语言。",
+		"语言特性：" + traits.phonology + "；语法要点：" + traits.grammar + "。",
 		moduleMap,
 		ironRulesFor(lang),
 	}, "\n"))

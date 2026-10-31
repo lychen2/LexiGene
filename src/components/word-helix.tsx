@@ -1,28 +1,18 @@
 import { useId } from 'react';
 import type { AnalysisDraft } from '@/lib/schema';
+import { collectHelixTerms } from '@/lib/helix-terms';
+import { t } from '@/lib/i18n';
 import { buildWordHelix, helixInk, helixOcclusion } from '@/lib/word-helix-layout.mjs';
-
-const functionWords = new Set(['a', 'an', 'the', 'of', 'to', 'in', 'on', 'at', 'by', 'for', 'and', 'or', 'with', 'is', 'it', 'as', 'from']);
 
 export function WordHelix({ doc }: { doc: AnalysisDraft }) {
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, '');
-  const one = doc.dimensions.one;
-  if (!one) return null;
-  const terms = [
-    doc.target,
-    one.bloodline.root,
-    ...one.bloodline.cognates.map(item => item.word),
-    ...(doc.dimensions.two?.nuance.words.map(item => item.word) ?? []),
-    ...(doc.dimensions.three?.chunks.items.flatMap(item => item.phrase.match(/[a-zA-Z][a-zA-Z'-]*/g) ?? []) ?? []),
-  ];
-  const words = [...new Set(terms.flatMap(term => term.trim().split(/\s+/)).filter(word => word && word.length <= 24 && !functionWords.has(word.toLowerCase())))];
+  if (!doc.dimensions.one) return null;
+  const words = collectHelixTerms(doc);
   const tokens = buildWordHelix(words);
   if (!tokens.length) return null;
 
   return <figure className="word-helix">
-    <svg viewBox="0 0 420 464" role="img" aria-label={
-      `由 ${doc.target} 的词根、同源词与已完成分析中的词汇组成的立体双螺旋`
-    }>
+    <svg viewBox="0 0 420 464" role="img" aria-label={t('由 {target} 的构词单位、同源词与已完成分析中的词汇组成的立体双螺旋', { target: doc.target })}>
       <defs>
         {tokens.map((token, index) => <path key={index} id={id + '-word-' + index} d={token.path} />)}
         <mask id={id + '-depth'} maskUnits="userSpaceOnUse" x="0" y="0" width="420" height="464">

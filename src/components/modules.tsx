@@ -134,7 +134,26 @@ export function LoadingDimension({ label, state, error, progress, onResume, onPa
 }
 export function WordHero({ doc, isDemo }: { doc: AnalysisDraft; isDemo: boolean }) {
   const one = doc.dimensions.one;
-  return <div className="word-hero" data-reveal=""><div className="word-hero-main"><div className="hero-kicker"><span className="live-dot" />{isDemo ? t('示例') : t('词条')}<span className="hero-language">{doc.language}</span></div><div className="word-title-row"><h1 lang={tagOf(doc.language)}>{doc.target}</h1>{one && <span className="part-of-speech">{one.overview.partOfSpeech}</span>}</div>{one && <><p className="pronunciation">{one.overview.pronunciation.split(/\s+/).map((token, i) => <Fragment key={i}>{i > 0 && ' '}<span>{token}</span></Fragment>)}</p><h2>{one.overview.core}</h2><p className="hero-definition">{one.overview.definition}</p></>}</div><div className="hero-art"><WordHelix doc={doc} /></div></div>;
+  const ruby = one?.overview.ruby ?? [];
+  return <div className="word-hero" data-reveal="">
+    <div className="word-hero-main">
+      <div className="hero-kicker"><span className="live-dot" />{isDemo ? t('示例') : t('词条')}<span className="hero-language">{doc.language}</span></div>
+      <div className="word-title-row">
+        <h1 lang={tagOf(doc.language)}>{ruby.length ? <ruby>{ruby.map((pair, i) => <Fragment key={i}>{pair.base}<rt>{pair.ruby}</rt></Fragment>)}</ruby> : doc.target}</h1>
+        {one && <span className="part-of-speech">{one.overview.partOfSpeech}</span>}
+      </div>
+      {one && <>
+        <p className="pronunciation">{one.overview.pronunciation.split(/\s+/).map((token, i) => <Fragment key={i}>{i > 0 && ' '}<span>{token}</span></Fragment>)}</p>
+        {(one.overview.pitch || one.overview.grammar) && <dl className="hero-notes">
+          {one.overview.pitch && <div><dt>{t('音调')}</dt><dd>{one.overview.pitch}</dd></div>}
+          {one.overview.grammar && <div><dt>{t('语法')}</dt><dd>{one.overview.grammar}</dd></div>}
+        </dl>}
+        <h2>{one.overview.core}</h2>
+        <p className="hero-definition">{one.overview.definition}</p>
+      </>}
+    </div>
+    <div className="hero-art"><WordHelix doc={doc} /></div>
+  </div>;
 }
 export function DimensionContent({ doc, index, onAdd, sandbox, state, error, progress, onResume, onPause }: { doc: AnalysisDraft; index: number; onAdd: (phrase: string) => void; sandbox: ReactNode; state: DimensionLoadState; error?: string; progress?: GenerationProgress; onResume?: () => void; onPause?: () => void }) {
   const loading = <LoadingDimension label={['正在挖掘词源与同源关系…', '正在描绘独立概念坐标…', '正在构建真实语境与练习…'][index]} state={state} error={error} progress={progress} onResume={onResume} onPause={onPause} />;

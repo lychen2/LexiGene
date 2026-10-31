@@ -34,6 +34,14 @@ Hebrew 56px, Devanagari and Thai 52px. Below 500px each shrinks with the
 existing clamps. Letter spacing follows the same logic: Latin tightens
 (`-3px`), CJK opens slightly, Arabic never gets tracking (it breaks joining).
 
+## Reading aids
+
+- **Furigana**: a Japanese headword is rendered as `<ruby>` with `rt` at 0.3em, centred, in the same script family. The pairs come from `overview.ruby`, so the model decides the reading and the UI only draws it.
+- **Pitch and tone**: `overview.pitch` is shown under the reading in the document's language (0 型 / 平板 for Tokyo Japanese, 调值 for Mandarin, 调类 for Thai and Vietnamese).
+- **Grammar**: `overview.grammar` carries what a learner cannot infer — gender, agreement, politeness level, word order — in one line.
+
+All three fields are optional: a language that has none of them simply omits them.
+
 ## Direction
 
 Arabic and Hebrew set `dir="rtl"` on the sheet. Text alignment, list markers

@@ -2,7 +2,7 @@
   "name": "LexiGene",
   "slug": "lexigene",
   "identifier": "dev.lexigene.app",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "devUrl": "http://127.0.0.1:5173",
   "devCommand": "npm run dev:web",
   "buildCommand": "npm run build:web",

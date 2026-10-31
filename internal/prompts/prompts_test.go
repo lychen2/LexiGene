@@ -102,7 +102,7 @@ func TestDimensionPromptsKeepOriginalInstructions(t *testing.T) {
 		Draft: draft, Dimension: contracts.KeyOne, Completed: contracts.Dimensions{},
 	})[1].Content
 	for _, expected := range []string{
-		"overview.definition：用简体中文", "不要写英文词典式释义",
+		"overview.definition：写精炼解释", "不要写词典式释义",
 		"bloodline.family：用 2–8 个字的简短血统标签", "bloodline.route：2–4 个短词",
 		"bloodline.root：只写短词根", "（暂无已完成维度）",
 	} {
@@ -254,7 +254,7 @@ func TestPromptFollowsStudiedLanguageAndExplanationLanguage(t *testing.T) {
 	for _, expected := range []string{
 		"目标语言与变体：日语（标准语（东京））",
 		"解释语言：English",
-		"用假名写读音",
+		"平假名读音",
 		"English译文使用English",
 	} {
 		if !strings.Contains(system, expected) {
@@ -274,5 +274,89 @@ func TestPromptFollowsStudiedLanguageAndExplanationLanguage(t *testing.T) {
 	}
 	if !strings.Contains(legacy, "用国际音标标注") {
 		t.Fatal("Latin-script target should be asked for IPA")
+	}
+}
+
+func TestJapanesePromptAsksForKanaFuriganaAndPitch(t *testing.T) {
+	draft := contracts.Draft{Target: "相変わらず", Language: "日语（标准语（东京））", Explain: "简体中文"}
+	one := BuildDimensionMessages(DimensionPromptInput{Draft: draft, Dimension: contracts.KeyOne})
+	three := BuildDimensionMessages(DimensionPromptInput{Draft: draft, Dimension: contracts.KeyThree})
+	system := one[0].Content
+	all := strings.Join([]string{one[0].Content, one[1].Content, three[0].Content, three[1].Content}, "\n")
+	for _, expected := range []string{
+		"一律给出平假名读音", "赫本式", "绝不使用国际音标",
+		"モーラ", "长音、促音",
+		"overview.ruby", "base（原文字形）", "ruby（平假名读音）",
+		"overview.pitch", "0 型平板",
+		"語種（和語・漢語・外来語・混種語）", "音読み/訓読み",
+		"overview.grammar", "五段動詞",
+		"常体 → 丁寧体 → 尊敬語・謙譲語",
+	} {
+		if !strings.Contains(all, expected) {
+			t.Fatalf("Japanese prompt missing %q", expected)
+		}
+	}
+	for _, unexpected := range []string{"用国际音标标注，并标出主重音", "英语的「词根 + 后缀」模板。"} {
+		if strings.Contains(system, unexpected) {
+			t.Fatalf("Japanese prompt kept an English-shaped instruction: %q", unexpected)
+		}
+	}
+}
+
+func TestGenderedAndRootPatternLanguagesGetTheirOwnFrames(t *testing.T) {
+	cases := map[string][]string{
+		"法语（法国）":      {"阴阳性", "性数配合", "tu/vous", "鼻化元音"},
+		"德语（德国）":      {"三个性", "四格", "du/Sie", "可分前缀", "词尾清化"},
+		"阿拉伯语（埃及）":    {"三母词根", "派生式", "阳性/阴性", "短元音通常不写出"},
+		"俄语（俄罗斯）":     {"重音位置", "六个格", "动词体", "ты/вы"},
+		"中文（简体中文（大陆））": {"造字法", "形旁与声旁", "送气与不送气", "55 / 阳平 35"},
+		"泰语（标准泰语）":    {"五个声调", "调值", "量词"},
+		"土耳其语（土耳其）":   {"黏着语", "元音和谐", "sen/siz"},
+	}
+	for language, expected := range cases {
+		draft := contracts.Draft{Target: "例词", Language: language, Explain: "简体中文"}
+		one := BuildDimensionMessages(DimensionPromptInput{Draft: draft, Dimension: contracts.KeyOne})
+		three := BuildDimensionMessages(DimensionPromptInput{Draft: draft, Dimension: contracts.KeyThree})
+		all := strings.Join([]string{one[0].Content, one[1].Content, three[0].Content, three[1].Content}, "\n")
+		for _, want := range expected {
+			if want == "" {
+				continue
+			}
+			if !strings.Contains(all, want) {
+				t.Fatalf("%s prompt missing %q", language, want)
+			}
+		}
+		if strings.Contains(all, "用国际音标标注，并标出主重音；若该变体") && language != "法语（法国）" && language != "德语（德国）" {
+			t.Fatalf("%s was handed the English IPA instruction", language)
+		}
+	}
+}
+
+func TestPitfallsTargetTheExplanationLanguageLearner(t *testing.T) {
+	draft := contracts.Draft{Target: "nostalgie", Language: "法语（法国）", Explain: "英语"}
+	messages := BuildDimensionMessages(DimensionPromptInput{Draft: draft, Dimension: contracts.KeyThree})
+	system := messages[0].Content + "\n" + messages[1].Content
+	if !strings.Contains(system, "以解释语言为母语的学习者") {
+		t.Fatal("pitfalls still assume a Chinese learner of English")
+	}
+	if strings.Contains(system, "中国学习者") {
+		t.Fatal("pitfalls kept the Chinese-learner frame")
+	}
+}
+
+func TestRegisterLadderFollowsTheLanguage(t *testing.T) {
+	cases := map[string]string{
+		"日语（标准语（东京））": "常体 → 丁寧体 → 尊敬語・謙譲語",
+		"中文（简体中文（大陆））": "书面语/口语",
+		"泰语（标准泰语）":     "ครับ/ค่ะ",
+		"印地语（标准印地语）":   "आप/तुम/तू",
+		"法语（法国）":       "tu/vous",
+	}
+	for language, expected := range cases {
+		draft := contracts.Draft{Target: "例词", Language: language, Explain: "简体中文"}
+		messages := BuildDimensionMessages(DimensionPromptInput{Draft: draft, Dimension: contracts.KeyThree})
+		if !strings.Contains(messages[1].Content, expected) {
+			t.Fatalf("%s register ladder missing %q", language, expected)
+		}
 	}
 }

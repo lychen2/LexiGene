@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.1.4
+
+Reading aids for Japanese, and analyses that stop assuming English.
+
+### Furigana, pitch and grammar
+
+- A Japanese headword now carries furigana: `日本` is shown with `に` and `ほん` above the kanji.
+- Pitch accent is stated the way Japanese writes it: `0 型（平板）：にほん￣，第一拍低、之后保持高`.
+- Noun gender, agreement, politeness level and word order appear as a one-line grammar note where a language has them — `阴性 · la maison`, `三性四格`, `해요体 / 합니다体`, `常体 → 丁寧体 → 尊敬語・謙譲語`.
+- JLPT lists now cover N1 to N5 (3,070 / 1,778 / 1,659 / 630 / 674 words).
+
+### No more English frames
+
+- Reading: never IPA for languages that do not use it. Japanese gets kana plus Hepburn romanisation, Chinese pinyin with tone values, Thai and Vietnamese tone names, Arabic and Indic scripts their own transliteration, Russian stress marks. Length, aspiration, nasal vowels and phonation are named where they change a word.
+- Word structure: Japanese separates 語種 and 音読み/訓読み; Chinese uses 造字法 and 形旁/声旁; Arabic shows the three-consonant root and pattern; Hebrew its root and בניין; German separable prefixes and compounds; Turkish agglutination and vowel harmony; the rest their own system.
+- Register: the ten-step ladder maps onto each language's own politeness system instead of English formal/informal.
+- Pitfalls now address learners of the explanation language, not Chinese speakers of English.
+
+### Hero helix
+
+- The ribbon is woven from the analysis's own word-formation units, relatives and collocations, so a Japanese entry spirals with 太陽, 日輪 and 日本の文化 rather than English filler.
+- Character widths are measured per script, so Han, kana and Hangul no longer overlap; the ribbon is set in the sheet's display face.
+
 ## 0.1.3
 
 Study any language, explain it in yours, and choose the interface language.

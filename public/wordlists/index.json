@@ -91,6 +91,36 @@
       "license": "CC BY-SA 4.0"
     },
     {
+      "slug": "ja-n3",
+      "label": "JLPT N3",
+      "lang": "ja",
+      "description": "日本语能力测试 N3 词汇",
+      "count": 1659,
+      "bytes": 85465,
+      "source": "OpenJLPT",
+      "license": "CC BY-SA 4.0"
+    },
+    {
+      "slug": "ja-n4",
+      "label": "JLPT N4",
+      "lang": "ja",
+      "description": "日本语能力测试 N4 词汇",
+      "count": 630,
+      "bytes": 32460,
+      "source": "OpenJLPT",
+      "license": "CC BY-SA 4.0"
+    },
+    {
+      "slug": "ja-n5",
+      "label": "JLPT N5",
+      "lang": "ja",
+      "description": "日本语能力测试 N5 词汇",
+      "count": 674,
+      "bytes": 33366,
+      "source": "OpenJLPT",
+      "license": "CC BY-SA 4.0"
+    },
+    {
       "slug": "zh-hsk5",
       "label": "HSK 5",
       "lang": "zh",

@@ -13,7 +13,7 @@ import (
 	"lexigene/internal/wiktionary"
 )
 
-const version = "0.1.3"
+const version = "0.1.4"
 
 // The development default is the client identifier supplied with this project.
 // Set LEXIGENE_WIKTIONARY_USER_AGENT to include your contact URL or email before distribution.

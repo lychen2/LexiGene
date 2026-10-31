@@ -61,7 +61,7 @@ run(join(buildTools, 'aapt2'), [
   '-A', assets,
   '--java', join(work, 'gen'),
   '--min-sdk-version', '26', '--target-sdk-version', '36',
-  '--version-code', process.env.ANDROID_VERSION_CODE || '4',
+  '--version-code', process.env.ANDROID_VERSION_CODE || '5',
   '--version-name', versionName,
   join(work, 'res.zip'),
 ]);

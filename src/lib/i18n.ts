@@ -174,6 +174,7 @@ const english: Record<string, string> = {
   '这个词单没能读取。换一个目标，或重新构建前端。': 'This list could not be read.',
   '词单来自': 'Lists from',
   '已去掉': ' removed ',
+  '由 {target} 的构词单位、同源词与已完成分析中的词汇组成的立体双螺旋': 'A double helix built from the word-formation units, relatives and terms of the {target} analysis',
   '英语': 'English',
   '日语': 'Japanese',
   '中文': 'Chinese',

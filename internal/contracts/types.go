@@ -41,6 +41,20 @@ type Overview struct {
 	Core          string `json:"core"`
 	Definition    string `json:"definition"`
 	PartOfSpeech  string `json:"partOfSpeech"`
+	// Ruby carries furigana pairs for a Japanese headword, in reading order.
+	Ruby []RubyPair `json:"ruby,omitempty"`
+	// Pitch is the pitch-accent or tone pattern written the way the studied
+	// language writes it, e.g. 0 型（平板）for Tokyo Japanese.
+	Pitch string `json:"pitch,omitempty"`
+	// Grammar states what a learner cannot guess: noun gender, agreement,
+	// politeness level or word order. Omitted for languages where none apply.
+	Grammar string `json:"grammar,omitempty"`
+}
+
+// RubyPair is one annotated run: the written form and the reading above it.
+type RubyPair struct {
+	Base string `json:"base"`
+	Ruby string `json:"ruby"`
 }
 
 // EvolutionStep is one stage in the origin story.

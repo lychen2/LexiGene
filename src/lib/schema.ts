@@ -43,7 +43,20 @@ export const slicesSchema = z.object({
     .refine(items => new Set(items.map(item => item.setting)).size === 3, 'Include friends, work and culture'),
   quiz: z.array(quizQuestionSchema).length(2).refine(items => new Set(items.map(item => item.id)).size === 2, 'Quiz IDs must be unique'),
 });
-export const overviewSchema = z.object({ pronunciation: text, core: text, definition: text, partOfSpeech: text });
+const rubyPair = z.object({ base: text, ruby: text });
+export const overviewSchema = z.object({
+  /** Reading line: IPA, kana, pinyin or a transliteration, per language. */
+  pronunciation: text,
+  core: text,
+  definition: text,
+  partOfSpeech: text,
+  /** Furigana pairs for a Japanese headword: kanji and the kana above it. */
+  ruby: z.array(rubyPair).max(12).optional(),
+  /** Pitch accent or tone pattern, as that language writes it. */
+  pitch: z.string().max(160).optional(),
+  /** Grammar facts learners cannot guess: gender, agreement, politeness. */
+  grammar: z.string().max(200).optional(),
+});
 export const dimensionOneSchema = z.object({ overview: overviewSchema, origin: originSchema, bloodline: bloodlineSchema });
 export const dimensionTwoSchema = z.object({ concept: conceptSchema, nuance: nuanceSchema });
 export const dimensionThreeSchema = z.object({ register: registerSchema, chunks: chunksSchema, pitfalls: pitfallsSchema, slices: slicesSchema });

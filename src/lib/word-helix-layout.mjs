@@ -5,9 +5,18 @@ export const brandVocabulary = [
   'lexeme', 'tone', 'speech', 'semantic', 'cognate', 'language',
 ];
 
-/** @param {string} word @param {number} size */
+/**
+ * Width of a word at a given size. Latin letters are narrow or wide depending
+ * on the letter; Han, kana, Hangul, Arabic and Indic scripts are square, so a
+ * single width per character keeps CJK ribbons from overlapping.
+ * @param {string} word @param {number} size
+ */
 function estimateWidth(word, size) {
-  return [...word].reduce((width, letter) => width + (/[iljtf'’.-]/.test(letter) ? .3 : /[mwMW]/.test(letter) ? .85 : .55), 0) * size;
+  return [...word].reduce((width, letter) => {
+    if (/[\u1100-\u11ff\u2e80-\u9fff\uac00-\ud7af\uff00-\uffef]/.test(letter)) return width + 1;
+    if (/[\u0600-\u06ff\u0590-\u05ff\u0900-\u0dff\u0e00-\u0e7f]/.test(letter)) return width + .62;
+    return width + (/[iljtf'’.-]/.test(letter) ? .3 : /[mwMW]/.test(letter) ? .85 : .55);
+  }, 0) * size;
 }
 
 /** @param {string[]} words @param {{compact?: boolean}} options */

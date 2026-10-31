@@ -172,3 +172,20 @@ its varieties; `src/app/globals.css` turns the script into type.
 
 Interface copy lives in `src/lib/i18n.ts`, keyed by its Chinese source text, so
 an untranslated string stays readable instead of blank.
+
+## Language framing
+
+An analysis of Japanese is not an analysis of English with different words. The
+frame changes with the language:
+
+- **Reading**: furigana pairs (`overview.ruby`), pitch accent or tone
+  (`overview.pitch`), and only IPA where the language's dictionaries use it.
+- **Grammar**: `overview.grammar` states gender, agreement, politeness level or
+  word order when the language has them.
+- **Word structure**: `origin` and `bloodline` describe 語種 and kanji readings
+  in Japanese, 造字法 in Chinese, three-consonant roots in Arabic, agglutination
+  in Turkish — never the English root-plus-suffix template.
+- **Register**: the ten-step ladder maps onto the language's own politeness
+  system; the labels stay the same so the control is learnable once.
+- **Ribbon**: the hero helix weaves the analysis's own terms, measured per
+  script, and falls back to a script-appropriate pool rather than English words.
