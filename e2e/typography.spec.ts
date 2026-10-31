@@ -87,15 +87,22 @@ test('heading wrap, paragraph ending, changing numbers, truncated label, mixed p
   await page.locator('.archive-trigger').click();
   await expect(page.locator('.history-item').first()).toBeVisible({ timeout: 15000 });
   await page.waitForTimeout(300);
-  const row = page.locator('.history-open strong').first();
-  await page.locator('.history-item').first().screenshot({ path: `${dir}/4-truncated-label.png` });
-  console.log('TRUNCATION ' + JSON.stringify(await row.evaluate(node => {
-    const style = getComputedStyle(node);
+  const item = page.locator('.history-item').first();
+  await item.screenshot({ path: `${dir}/4-truncated-label.png` });
+  console.log('TRUNCATION ' + JSON.stringify(await item.evaluate(node => {
+    const strong = node.querySelector('strong') as HTMLElement;
+    const style = getComputedStyle(strong);
+    const button = node.querySelector('.history-open') as HTMLElement;
+    const itemBox = node.getBoundingClientRect();
     return {
-      client: Math.round(node.clientWidth), scroll: Math.round(node.scrollWidth),
-      cut: node.scrollWidth > node.clientWidth + 1,
+      // The row is 510px wide inside the drawer; a 61-character target is wider.
+      rowWidth: Math.round(itemBox.width),
+      rowLines: Math.round(node.scrollHeight / parseFloat(getComputedStyle(node).fontSize || '16') / 1.3),
+      labelClient: Math.round(strong.clientWidth), labelScroll: Math.round(strong.scrollWidth),
+      cut: strong.scrollWidth > strong.clientWidth + 1,
       overflow: style.overflow, nowrap: style.whiteSpace, ellipsis: style.textOverflow,
-      title: node.closest('button')?.getAttribute('title') ?? null,
+      buttonScroll: Math.round(button.scrollWidth), buttonClient: Math.round(button.clientWidth),
+      title: button.getAttribute('title'),
     };
   })));
 
