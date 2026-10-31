@@ -1,0 +1,45 @@
+{
+  "source": "ECDICT",
+  "sourceUrl": "https://github.com/skywind3000/ECDICT",
+  "license": "MIT",
+  "excluded": {
+    "label": "四级及以下与日常高频词"
+  },
+  "goals": [
+    {
+      "slug": "idioms",
+      "label": "地道表达",
+      "description": "阅读里学不到的俚语、习语和职场行话",
+      "count": 74,
+      "bytes": 9413
+    },
+    {
+      "slug": "kaoyan",
+      "label": "考研",
+      "description": "硕士研究生入学考试大纲词汇，去掉四级及以下",
+      "count": 1122,
+      "bytes": 96792
+    },
+    {
+      "slug": "ielts",
+      "label": "雅思",
+      "description": "雅思常见词汇，去掉四级及以下",
+      "count": 1861,
+      "bytes": 161664
+    },
+    {
+      "slug": "toefl",
+      "label": "托福",
+      "description": "托福常见词汇，去掉四级及以下",
+      "count": 4066,
+      "bytes": 353984
+    },
+    {
+      "slug": "gre",
+      "label": "GRE",
+      "description": "GRE 常见词汇，去掉四级及以下",
+      "count": 6006,
+      "bytes": 523088
+    }
+  ]
+}

@@ -251,6 +251,42 @@ test('upstream streaming shows progress before completion and supports pause and
   } finally { pauseThirdStream = false; releaseThirdStream?.(); releaseThirdStream = undefined; }
 });
 
+test('the word desk filters goal lists and starts an analysis for the chosen word', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1050 });
+  await page.goto('/');
+  await configure(page);
+  await page.getByRole('button', { name: /目标词单/ }).click();
+  const desk = page.getByRole('dialog');
+  await expect(desk.getByRole('tab', { name: /地道表达/ })).toHaveAttribute('aria-selected', 'true');
+  await expect(desk.getByRole('tab', { name: /GRE/ })).toBeVisible();
+
+  await desk.getByRole('tab', { name: /GRE/ }).click();
+  await expect(desk.getByText('GRE 常见词汇，去掉四级及以下')).toBeVisible();
+  await expect(desk.getByRole('button', { name: /下一个未解剖/ })).toBeVisible();
+
+  const search = desk.getByLabel('搜索词单');
+  await search.fill('abstruse');
+  await expect(desk.getByText('abstruse', { exact: true })).toBeVisible();
+  await search.fill('不存在的一个词');
+  await expect(desk.getByText('没有符合条件的词。换个关键词，或去掉筛选。')).toBeVisible();
+
+  await search.fill('abstruse');
+  await desk.getByText('abstruse', { exact: true }).click();
+  await expect(page.getByRole('textbox', { name: '目标单词或短语' })).toHaveValue('abstruse');
+  await expect(page.getByRole('status').filter({ hasText: '正在完成' })).toBeVisible();
+});
+
+test('the word desk lists expressions that reading rarely teaches', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1050 });
+  await page.goto('/');
+  await page.getByRole('button', { name: /目标词单/ }).click();
+  const desk = page.getByRole('dialog');
+  await expect(desk.getByText('阅读里学不到的俚语、习语和职场行话')).toBeVisible();
+  await desk.getByLabel('搜索词单').fill('说漏');
+  await expect(desk.getByText('spill the beans', { exact: true })).toBeVisible();
+  await expect(desk.getByText(/词单来自/)).toContainText('ECDICT');
+});
+
 test('mobile rendering, imported history, card selection persistence and deletion', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.setViewportSize({ width: 390, height: 844 }); await page.goto('/'); await page.evaluate(() => document.fonts.ready);

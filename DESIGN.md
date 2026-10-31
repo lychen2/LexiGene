@@ -10,7 +10,7 @@ This refinement preserves the existing layout, content, storage, API contracts, 
 ## Visual direction
 
 Keep the quiet botanical editorial style: paper, forest ink, restrained terracotta, and English serif display type.
-Use visual variation 4/10, motion 2/10, and information density 6/10.
+Use visual variation 4/10, motion 5/10, and information density 6/10.
 Prioritise clear reading, visible controls, and a single primary action in each task area.
 Omit decorative English subtitles, duplicate section labels, and slogans. Keep labels that explain learning content or available actions.
 Use a word-cloud double helix instead of the generic orbit illustration. Add no remote fonts.
@@ -67,7 +67,8 @@ At 390px, retain the input, language selector, submit action, and export control
 Allow English words and pronunciation to wrap without clipping.
 Keep the mobile introduction compact so the vocabulary note appears promptly.
 Use short colour and surface transitions. Preserve reduced-motion behaviour.
-Do not add entrance choreography or change the existing interaction model.
+Content may settle into place as it enters the viewport; the interaction model itself stays unchanged.
+See the motion system below for what may move and why.
 
 ## Acceptance
 
@@ -75,3 +76,52 @@ Inspect desktop and 390px screenshots of the first screen, a module, and the set
 Exercise search focus, model settings, directory navigation, and existing learning acceptance tests.
 Check typography, focus visibility, contrast, overflow, and the unchanged import/export task flow.
 Android content must remain inside status and navigation bars, including edge-to-edge Android 15 layouts.
+
+## Motion system
+
+Added after the product felt too still to read as alive. The rule is: movement
+answers the reader or places content; it never decorates a wait.
+
+Two curves, three durations:
+
+- `--ease: cubic-bezier(.2,.8,.2,1)` for arrivals and reveals.
+- `--spring: cubic-bezier(.34,1.3,.5,1)` for anything the reader just touched.
+- `--dur-1: .16s` state, `--dur-2: .3s` surface, `--dur-3: .55s` content.
+
+| Element | Motion | Reason |
+| --- | --- | --- |
+| Modules, hero | 16px rise and fade on viewport entry, once | shows the document is longer than the screen |
+| Hero word | letter spacing settles over .7s | the word is the subject; it lands |
+| Dimension nav | underline scales in on the current tab | position in a long document |
+| Evolution dots, cognate stars, score bars, progress track | spring pop or scale from the left | confirms the tap, turns a number into a length |
+| Running dimension | 2.6s breathing border, shimmering skeleton | this is a wait; it should look alive, not urgent |
+| Completed practice attempt | one short ink burst in five paper pigments | a small reward, once |
+| Word helix | 11s drift of ±7px | the plate stays alive while reading |
+| Goal list rows | 14ms stagger, capped at 12 rows | a list appearing, not a slot machine |
+
+Reveal state lives in `[data-reveal]` and `is-revealed`; `src/lib/motion.ts`
+supplies the observer and the burst, and both return immediately under
+`prefers-reduced-motion`. Elements reveal when any sliver enters the viewport,
+so content that peeks above the fold never waits for a full scroll.
+
+Banned: `transition: all`, `scale(0)` entrances, looping attention-seekers on
+primary buttons, animations over one second other than the two ambient drifts,
+and any motion that survives reduced-motion.
+
+## Goal word lists
+
+`目标词单` opens a drawer of lists for 考研, 雅思, 托福, GRE and everyday
+expressions. Lists are data files under `public/wordlists`, loaded per tab, so
+the page pays nothing for a list nobody opens.
+
+- Education here is not a beginner's course: the CET-4 band, everyday
+  high-frequency words, inflected forms and proper nouns are removed, because
+  reading teaches those on its own.
+- `idioms.json` is hand-written and holds what reading rarely shows: slang,
+  idioms, workplace shorthand. It is the reason the product exists.
+- Progress counts existing analyses, so the archive and the lists cannot
+  disagree. `下一个未解剖` starts the next unanalysed word directly.
+- Rows show the word, one short gloss, and the state. Rarity is shown only where
+  it varies, and exam lists never repeat the same chip on every row.
+- The source, its licence and what was excluded are named in the drawer: a
+  learner should know where a list came from.

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { AnimatePresence, LazyMotion, MotionConfig, domAnimation } from 'motion/react';
 import * as m from 'motion/react-m';
-import { ArrowDownToLine, ArrowLeft, ArrowRight, BookOpen, Check, CheckCircle2, ChevronDown, Clock3, Download, FileJson, FlaskConical, FolderHeart, History, Layers3, Loader2, Menu, Plus, Search, Send, Settings2, Sparkles, Trash2, Upload, X } from 'lucide-react';
+import { ArrowDownToLine, ArrowLeft, ArrowRight, BookMarked, BookOpen, Check, CheckCircle2, ChevronDown, Clock3, Download, FileJson, FlaskConical, FolderHeart, History, Layers3, Loader2, Menu, Plus, Search, Send, Settings2, Sparkles, Trash2, Upload, X } from 'lucide-react';
 import { demo } from '@/lib/demo';
 import { analysisSchema, apiConfigSchema, dimensionSchemas, gradeSchema, type AnalysisDocument, type AnalysisDraft, type ApiConfig, type Attempt, type DimensionKey, type GenerationProgress, type QuizQuestion, type StudyCard, type VocabularyHint } from '@/lib/schema';
 import { buildCards, cardsToTsv } from '@/lib/cards';
@@ -11,9 +11,12 @@ import { deleteAnalysis, getAttempts, getDrafts, getHistory, loadSelections, sav
 import { apiFetch as fetch, defaultConfig, downloadBlob, persistConfig, readConfig, readEvents, responseError, safeFilename } from '@/lib/client';
 import { DimensionContent, DimensionHeading, dimensionNames, ExampleLine, moduleIcons, moduleNames, WordHero } from './modules';
 import { QuizScenario } from './quiz-scenario';
+import { WordDesk } from './word-desk';
+import { burstFromElement, revealOnScroll } from '@/lib/motion';
+import { wordKey } from '@/lib/wordlists';
 import brandIcon from '@/app/icon.svg';
 
-type DrawerKind = 'settings' | 'history' | 'export' | null;
+type DrawerKind = 'settings' | 'history' | 'export' | 'words' | null;
 const keys: DimensionKey[] = ['one', 'two', 'three'];
 const cardTypeNames = { core: '核心概念', chunk: '常见搭配', pitfall: '易错对比', nuance: '近义辨析', quiz: '情境造句' };
 const initialTypes = new Set(['core', 'chunk', 'pitfall']);
@@ -76,10 +79,10 @@ export default function LexiGene() {
     } catch { notify('无法读取本地导出选择，请重试。'); }
   }
   async function openRecord(record: AnalysisDraft) { if (busy) return; setDoc(record); setLanguage(record.language); setQuery(''); setError(''); setDrawer(null); window.scrollTo({ top: 0, behavior: 'instant' }); }
-  async function generate(targetDraft?: AnalysisDraft) {
+  async function generate(targetDraft?: AnalysisDraft, explicit?: string) {
     if (busy) return;
     if (!apiConfigSchema.safeParse(config).success) { setDrawer('settings'); return; }
-    const target = query.trim();
+    const target = (explicit ?? query).trim();
     if (!targetDraft && !target) { document.getElementById('target-input')?.focus(); return; }
     if (!targetDraft) {
       const found = history.find(item => item.target.toLowerCase() === target.toLowerCase() && item.language === language);
@@ -142,13 +145,18 @@ export default function LexiGene() {
     } catch { notify('词汇提示已加载，本机保存未完成。'); }
   }
   function showDemo() { if (busy) return; void openRecord(demo); }
+  const analyzed = useCallback((word: string) => {
+    const key = wordKey(word);
+    return history.some(item => wordKey(item.target) === key) || drafts.some(item => wordKey(item.target) === key);
+  }, [history, drafts]);
+  useEffect(() => revealOnScroll(document), [doc]);
   const focusSearch = useCallback(() => {
     setMobileMenu(false);
     window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
     requestAnimationFrame(() => document.getElementById('target-input')?.focus({ preventScroll: true }));
   }, []);
 
-  const sidebar = <><div className="sidebar-workspace"><button className="workspace-link selected" onClick={focusSearch}><FlaskConical size={17} /> 词汇研究台 <span className="shortcut">⌘ K</span></button><button className="workspace-link" onClick={() => { setMobileMenu(false); setDrawer('history'); }}><FolderHeart size={17} /> 学习档案 <span className="count-badge">{history.length}</span></button></div><div className="sidebar-chapters"><div className="sidebar-label chapter-label">解剖目录 <span>8 个模块</span></div>{dimensionNames.map((name, d) => <div className={`chapter-group chapter-${d}`} key={name}><span className="chapter-group-name"><i />{name}</span>{moduleNames.map((name, i) => { if ((d === 0 && i > 1) || (d === 1 && (i < 2 || i > 3)) || (d === 2 && i < 4)) return null; const Icon = moduleIcons[i]; return <button key={name} onClick={() => jump(`module-${i + 1}`)} aria-current={activeModule === i + 1 ? 'location' : undefined} className={activeModule === i + 1 ? 'active' : ''}><Icon size={15} /><span>{name}</span><small>{String(i + 1).padStart(2, '0')}</small></button>; })}</div>)}</div><div className="sidebar-bottom"><button className="api-sidebar" onClick={() => { setMobileMenu(false); setDrawer('settings'); }}><span className={`api-status ${config.apiKey ? 'configured' : ''}`} /><span><strong>{config.apiKey ? '模型已配置' : '连接你的模型'}</strong>{config.apiKey && <small>{config.model}</small>}</span><Settings2 size={16} /></button></div></>;
+  const sidebar = <><div className="sidebar-workspace"><button className="workspace-link selected" onClick={focusSearch}><FlaskConical size={17} /> 词汇研究台 <span className="shortcut">⌘ K</span></button><button className="workspace-link" onClick={() => { setMobileMenu(false); setDrawer('history'); }}><FolderHeart size={17} /> 学习档案 <span className="count-badge">{history.length}</span></button><button className="workspace-link" onClick={() => { setMobileMenu(false); setDrawer('words'); }}><BookMarked size={17} /> 目标词单</button></div><div className="sidebar-chapters"><div className="sidebar-label chapter-label">解剖目录 <span>8 个模块</span></div>{dimensionNames.map((name, d) => <div className={`chapter-group chapter-${d}`} key={name}><span className="chapter-group-name"><i />{name}</span>{moduleNames.map((name, i) => { if ((d === 0 && i > 1) || (d === 1 && (i < 2 || i > 3)) || (d === 2 && i < 4)) return null; const Icon = moduleIcons[i]; return <button key={name} onClick={() => jump(`module-${i + 1}`)} aria-current={activeModule === i + 1 ? 'location' : undefined} className={activeModule === i + 1 ? 'active' : ''}><Icon size={15} /><span>{name}</span><small>{String(i + 1).padStart(2, '0')}</small></button>; })}</div>)}</div><div className="sidebar-bottom"><button className="api-sidebar" onClick={() => { setMobileMenu(false); setDrawer('settings'); }}><span className={`api-status ${config.apiKey ? 'configured' : ''}`} /><span><strong>{config.apiKey ? '模型已配置' : '连接你的模型'}</strong>{config.apiKey && <small>{config.model}</small>}</span><Settings2 size={16} /></button></div></>;
 
   useEffect(() => { const handle = (e: KeyboardEvent) => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); focusSearch(); } }; window.addEventListener('keydown', handle); return () => window.removeEventListener('keydown', handle); }, [focusSearch]);
 
@@ -177,20 +185,21 @@ export default function LexiGene() {
     <footer className="study-footer"><span className="footer-mark"><BrandMark /> LexiGene.</span><button className="text-button" onClick={focusSearch}>查询下一个词 <ArrowRight size={14} /></button></footer></div>
     <div className="page-bottom">{complete && doc.id !== demo.id && <button onClick={() => void generate({ ...doc, id: crypto.randomUUID(), createdAt: new Date().toISOString(), dimensions: {} })} disabled={busy}>重新解析 {doc.target}</button>}</div></div></main>
     <AnimatePresence>{toast && <m.div role="status" className="toast" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}><CheckCircle2 size={17} />{toast}</m.div>}</AnimatePresence>
-    {drawer && <Drawer title={{ settings: '连接你的语言模型', history: '学习档案', export: '导出 Anki 卡片' }[drawer]} subtitle="" onClose={() => setDrawer(null)}>
+    {drawer && <Drawer title={{ settings: '连接你的语言模型', history: '学习档案', export: '导出 Anki 卡片', words: '目标词单' }[drawer]} subtitle="" wide={drawer === 'words'} onClose={() => setDrawer(null)}>
       {drawer === 'settings' && <SettingsForm config={config} remember={remember} onSave={saveConfig} />}
       {drawer === 'history' && <HistoryPanel history={history} drafts={drafts} busy={busy} onOpen={openRecord} onDelete={removeRecord} onImport={() => fileInput.current?.click()} />}
       {drawer === 'export' && complete && <ExportPanel doc={complete} cards={cards} selected={selectedCards} onChange={ids => { setSelectedCards(ids); void saveSelections(complete.id, ids).catch(() => notify('无法保存卡片选择，请重试。')); }} notify={notify} />}
+      {drawer === 'words' && <WordDesk analyzed={analyzed} onPick={word => { setDrawer(null); setQuery(word); void generate(undefined, word); }} />}
     </Drawer>}
     <input type="file" hidden ref={fileInput} accept="application/json,.json" aria-label="导入 JSON 文件" onChange={e => void importJson(e.target.files?.[0])} /></div></LazyMotion></MotionConfig>;
 }
 
 function BrandMark() { return <img src={brandIcon} width={36} height={36} alt="" aria-hidden="true" />; }
 
-function Drawer({ title, subtitle, onClose, children, side = 'right' }: { title: string; subtitle: string; onClose: () => void; children: ReactNode; side?: 'left' | 'right' }) {
+function Drawer({ title, subtitle, onClose, children, side = 'right', wide = false }: { title: string; subtitle: string; onClose: () => void; children: ReactNode; side?: 'left' | 'right'; wide?: boolean }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => { const dialog = ref.current; dialog?.showModal(); const previous = document.body.style.overflow; document.body.style.overflow = 'hidden'; return () => { dialog?.close(); document.body.style.overflow = previous; }; }, []);
-  return <dialog id={side === 'left' ? 'mobile-directory' : undefined} className={`drawer-dialog${side === 'left' ? ' directory-dialog' : ''}`} ref={ref} onCancel={e => { e.preventDefault(); onClose(); }} onClick={e => { if (e.target === e.currentTarget) onClose(); }} aria-labelledby={side === 'left' ? 'directory-title' : 'drawer-title'}><m.div className="drawer-content" initial={{ opacity: 0, x: side === 'left' ? -20 : 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: .2, ease: 'easeOut' }}><header className="drawer-header">{subtitle && <span className="eyebrow">{subtitle}</span>}<h2 id={side === 'left' ? 'directory-title' : 'drawer-title'}>{title}</h2><button className="icon-button" aria-label="关闭面板" onClick={onClose}><X size={20} /></button></header>{children}</m.div></dialog>;
+  return <dialog id={side === 'left' ? 'mobile-directory' : undefined} className={`drawer-dialog${side === 'left' ? ' directory-dialog' : ''}${wide ? ' word-drawer' : ''}`} ref={ref} onCancel={e => { e.preventDefault(); onClose(); }} onClick={e => { if (e.target === e.currentTarget) onClose(); }} aria-labelledby={side === 'left' ? 'directory-title' : 'drawer-title'}><m.div className="drawer-content" initial={{ opacity: 0, x: side === 'left' ? -20 : 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: .2, ease: 'easeOut' }}><header className="drawer-header">{subtitle && <span className="eyebrow">{subtitle}</span>}<h2 id={side === 'left' ? 'directory-title' : 'drawer-title'}>{title}</h2><button className="icon-button" aria-label="关闭面板" onClick={onClose}><X size={20} /></button></header>{children}</m.div></dialog>;
 }
 function SettingsForm({ config, remember, onSave }: { config: ApiConfig; remember: boolean; onSave: (config: ApiConfig, remember: boolean) => void }) {
   const [form, setForm] = useState(config);
@@ -297,7 +306,7 @@ function Sandbox({ doc, config, attempts, onConfigure, onAttempt, onQuestionHint
   const answer = answers[question.id] ?? latest?.answer ?? '';
   useEffect(() => () => abortRef.current?.abort(), []);
   async function submit(e: FormEvent) { e.preventDefault(); if (!answer.trim() || busy) return; if (!apiConfigSchema.safeParse(config).success) { onConfigure(); return; } setBusy(true); setError(''); const abort = new AbortController(); abortRef.current = abort;
-    try { const response = await fetch('/api/grade', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ config, target: doc.target, language: doc.language, question, answer: answer.trim(), context: { core: doc.dimensions.one?.overview.core || doc.target, register: three.register.score, subtext: three.register.subtext, chunks: three.chunks.items.map(item => item.phrase) } }), signal: abort.signal }); if (!response.ok) throw new Error(await responseError(response)); const grade = gradeSchema.parse(await response.json()); await onAttempt({ id: crypto.randomUUID(), analysisId: doc.id, questionId: question.id, answer: answer.trim(), createdAt: new Date().toISOString(), grade }); }
+    try { const response = await fetch('/api/grade', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ config, target: doc.target, language: doc.language, question, answer: answer.trim(), context: { core: doc.dimensions.one?.overview.core || doc.target, register: three.register.score, subtext: three.register.subtext, chunks: three.chunks.items.map(item => item.phrase) } }), signal: abort.signal }); if (!response.ok) throw new Error(await responseError(response)); const grade = gradeSchema.parse(await response.json()); await onAttempt({ id: crypto.randomUUID(), analysisId: doc.id, questionId: question.id, answer: answer.trim(), createdAt: new Date().toISOString(), grade }); if (grade.usesTarget) burstFromElement(document.querySelector('.grade-scores')); }
     catch (cause) { if (!abort.signal.aborted) setError(cause instanceof Error ? cause.message : '批改未完成，请重试。'); } finally { setBusy(false); }
   }
   return <div className="sandbox"><header className="sandbox-header"><span className="examiner-avatar">✳</span><div><h4>造句练习</h4></div><span className="quiz-count">{questionIndex + 1} / 2</span></header><div className="quiz-switch">{three.slices.quiz.map((q, i) => <button className={i === questionIndex ? 'active' : ''} disabled={busy} onClick={() => { setQuestionIndex(i); setReference(false); setError(''); }} key={q.id}>情境 {i + 1}</button>)}</div><QuizScenario key={question.id} question={question} config={config} target={doc.target} language={doc.language} onHints={hints => onQuestionHints(question.id, hints)} /><form onSubmit={submit}><label htmlFor="quiz-answer" className="tiny-label">用 {doc.target} 或相关语块回应</label><textarea id="quiz-answer" lang="en" value={answer} onChange={e => setAnswers({ ...answers, [question.id]: e.target.value })} placeholder="Here’s what I would say…" maxLength={3000} rows={3} disabled={busy} required /><div className="quiz-actions"><button type="button" className="text-button" onClick={() => setReference(!reference)}>{reference ? '收起参考' : '看看参考回答'}<ChevronDown size={13} /></button><button className="primary-button" disabled={busy || !answer.trim()}>{busy ? <Loader2 size={15} className="spin" /> : <Send size={14} />}{busy ? '考官正在斟酌' : latest ? '再次提交批改' : '交给考官'}</button></div></form>{reference && <div className="reference-answer"><ExampleLine value={question.reference} /></div>}{error && <p role="alert" className="form-message failure">{error}</p>}{latest && <div className="grade-result"><div className="grade-scores">{([['naturalness', '地道度'], ['register', '语域匹配'], ['imagery', '画面感']] as const).map(([key, label]) => <div key={key}><span>{label}</span><strong>{latest.grade.scores[key]}<small>/10</small></strong><div className="score-track"><span style={{ transform: `scaleX(${latest.grade.scores[key] / 10})` }} /></div></div>)}</div>{!latest.grade.usesTarget && <p className="target-reminder">把目标词或相关语块加进回应，再试一次。</p>}<p className="grade-feedback">{latest.grade.feedback}</p><div className="polished-answer"><span className="eyebrow">更自然的说法</span><ExampleLine value={latest.grade.correction} /></div><ul className="grade-changes">{latest.grade.changes.map((change, i) => <li key={i}>{change}</li>)}</ul><p className="grade-followup">{latest.grade.followUp}</p><span className="attempt-count">已练习 {matching.length} 次 · 本机自动保存</span></div>}</div>;

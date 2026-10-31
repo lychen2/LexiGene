@@ -11,7 +11,7 @@ export const dimensionNames = ['词源与同源词', '词义与近义词', '用�
 export const moduleIcons = [GitBranch, Sparkles, Microscope, Layers3, Thermometer, Feather, CornerDownRight, MessageCircle];
 
 export function Section({ number, title, children, className = '', action }: { number: number; title: string; children: ReactNode; className?: string; action?: ReactNode }) {
-  return <section id={`module-${number}`} className={`module ${className}`}>
+  return <section id={`module-${number}`} className={`module ${className}`} data-reveal="" style={{ '--reveal-delay': `${(number % 3) * 60}ms` } as React.CSSProperties}>
     <header className="module-heading"><div className="module-number">{String(number).padStart(2, '0')}</div><div><h3>{title}</h3></div>{action && <div className="module-action">{action}</div>}</header>
     {children}
   </section>;
@@ -119,7 +119,7 @@ export function LoadingDimension({ label, state, error, progress, onResume, onPa
 }
 export function WordHero({ doc, isDemo }: { doc: AnalysisDraft; isDemo: boolean }) {
   const one = doc.dimensions.one;
-  return <div className="word-hero"><div className="word-hero-main"><div className="hero-kicker"><span className="live-dot" />{isDemo ? '示例' : '词条'}<span className="hero-language">{doc.language}</span></div><div className="word-title-row"><h1 lang="en">{doc.target}</h1>{one && <span className="part-of-speech">{one.overview.partOfSpeech}</span>}</div>{one && <><p className="pronunciation">{one.overview.pronunciation}</p><h2>{one.overview.core}</h2><p className="hero-definition">{one.overview.definition}</p></>}</div><div className="hero-art"><WordHelix doc={doc} /></div></div>;
+  return <div className="word-hero" data-reveal=""><div className="word-hero-main"><div className="hero-kicker"><span className="live-dot" />{isDemo ? '示例' : '词条'}<span className="hero-language">{doc.language}</span></div><div className="word-title-row"><h1 lang="en">{doc.target}</h1>{one && <span className="part-of-speech">{one.overview.partOfSpeech}</span>}</div>{one && <><p className="pronunciation">{one.overview.pronunciation}</p><h2>{one.overview.core}</h2><p className="hero-definition">{one.overview.definition}</p></>}</div><div className="hero-art"><WordHelix doc={doc} /></div></div>;
 }
 export function DimensionContent({ doc, index, onAdd, sandbox, state, error, progress, onResume, onPause }: { doc: AnalysisDraft; index: number; onAdd: (phrase: string) => void; sandbox: ReactNode; state: DimensionLoadState; error?: string; progress?: GenerationProgress; onResume?: () => void; onPause?: () => void }) {
   const loading = <LoadingDimension label={['正在挖掘词源与同源关系…', '正在描绘独立概念坐标…', '正在构建真实语境与练习…'][index]} state={state} error={error} progress={progress} onResume={onResume} onPause={onPause} />;

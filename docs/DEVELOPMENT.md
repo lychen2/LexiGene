@@ -34,6 +34,18 @@ The Linux executable is `build/linux-amd64/lexigene`. Its `.deb` and `.tar.gz` p
 
 `tools/run-go.mjs` keeps Go modules, build caches, and temporary files inside `artifacts/`.
 
+## Goal word lists
+
+`tools/build-wordlists.py` writes the goal lists into `public/wordlists/` from ECDICT, a 66 MB CSV fetched once into `artifacts/ecdict/`. Run it with `--download` on a machine that has no copy yet.
+
+The generator drops words tagged `cet4`, Oxford-3000 entries, Collins 4–5 words, everything within the 4,000 most frequent words, inflected forms (`0:` in ECDICT's `exchange` column), proper nouns and anything under three letters. Exam tagging then splits what is left into 考研 (`ky`), 雅思 (`ielts`), 托福 (`toefl`) and GRE (`gre`). `idioms.json` is hand-written and only indexed by the generator.
+
+`tools/prerender.mjs` copies `public/wordlists/` into `dist/`, because `vite.config.ts` sets `publicDir: false`. A list reaches the browser only when its tab is opened.
+
+## Motion
+
+`src/lib/motion.ts` provides `revealOnScroll`, which adds `is-revealed` to `[data-reveal]` elements once, and `inkBurst`, a short canvas burst for a completed practice attempt. Both return immediately under `prefers-reduced-motion`. Timing tokens (`--ease`, `--spring`, `--dur-1..3`) live in `src/app/globals.css`; `DESIGN.md` explains what may move and why.
+
 ## Auto-updates
 
 Desktop builds carry signed update manifests. `mygo.json` names the signing key's public half in `updates.publicKey` and the release repository in `updates.github`; `MYGO_UPDATER_PRIVATE_KEY` holds the private half when building, and the `MYGO_UPDATER_PRIVATE_KEY` repository secret holds it in CI.
