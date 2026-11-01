@@ -1,5 +1,47 @@
 # Changelog
 
+## 0.1.5
+
+Text that wraps like the language it is written in, and one corner scale.
+
+This release carries everything since 0.1.2: the 0.1.3 language work (any target
+language, a separate explanation language, an interface in Chinese or English,
+typography per script), the 0.1.4 reading aids (furigana, pitch accent, grammar
+notes, JLPT N1–N5), and the two changes below. Users still on 0.1.2 get all of it
+in one update.
+
+### Text behaves
+
+- **Headings balance, paragraphs do not end on a lonely word.** `text-wrap:
+  balance` on titles and hero lines, `text-wrap: pretty` on prose, so a paragraph
+  no longer keeps one word on its last line. A 4 MB error message no longer splits
+  its number from its unit.
+- **Chinese is set as Chinese.** Justified to a whole number of characters on a
+  30em measure, thin gaps beside Latin runs (`text-autospace`), half-width space
+  trimmed at a line start (`text-spacing-trim`). Scoped with `:lang(zh)`, so
+  English keeps its own rules.
+- **Chinese headings break between words.** Word boundaries from a vendored
+  BudouX model (44 KB Simplified Chinese, Apache-2.0) become `<wbr>` stops with
+  `word-break: keep-all`, so 一个长标题 never splits mid-word.
+- **Labels stay whole, long values truncate.** Buttons, chips, tabs and badges no
+  longer squeeze onto two lines; names in the archive row and the desk row end in
+  an ellipsis, with the full value in a tooltip. Figures that change in place keep
+  their width with tabular numerals.
+- `line-break` stays at its default so 避头尾 keeps working, and nothing uses
+  `word-break: break-all` any more.
+
+### One corner scale
+
+- Four radius tokens on the 4px grid: chips 4, controls 8, panels 16, sheet 24,
+  plus a pill token for round tracks. Thirty-one rules that carried their own 2, 3,
+  5, 6, 9 or 12px value now use a token, so nesting is predictable: sheet 24,
+  module 16, the surface inside a module 8, the chip inside that 4.
+- Chrome and Edge 139+ draw continuous corners (`corner-shape:
+  superellipse(1.25)`, behind `@supports` and disabled under reduced motion);
+  Safari and Firefox keep the plain radius. Dots, avatars and the slider track
+  declare `corner-shape: round` so they stay round.
+- `DESIGN.md` records the scale, the nesting rule and the continuous-corner opt-in.
+
 ## 0.1.4
 
 Reading aids for Japanese, and analyses that stop assuming English.
